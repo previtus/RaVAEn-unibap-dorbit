@@ -6,10 +6,14 @@ from model_functions import Module, DeeperVAE
 from util_functions import which_device, tiles2image
 from anomaly_functions import twin_vae_change_score
 from tqdm import tqdm
+import pytorch_lightning as pl
 
 
 PATH_model_weights = "/home/vitek/Vitek/Work/Trillium - RaVAEn 2/data/model/model_rgbnir.ckpt"
 ROOT_data = "/home/vitek/Vitek/Work/Trillium - RaVAEn 2/data/sample_data/"
+in_memory = True # True = Fast, False = Mem efficient, slow I/O
+
+pl.seed_everything(42)
 
 ##### DATA
 
@@ -49,14 +53,14 @@ settings = {'dataloader': {
 data_normalizer = settings["normalizer"](settings)
 print("loaded data_normalizer")
 
-data_module_after = DataModule(settings, data_normalizer)
+data_module_after = DataModule(settings, data_normalizer, in_memory)
 data_module_after.setup()
 data_normalizer.setup(data_module_after)
 len_train_ds_after = len(data_module_after.val_dataloader())
 
 settings_before = settings.copy()
 settings_before["dataset"]["data_base_path"] = ROOT_data+'gee_before' # < this one will load from the "before" folder
-data_module_before = DataModule(settings_before, data_normalizer)
+data_module_before = DataModule(settings_before, data_normalizer, in_memory)
 data_module_before.setup()
 data_normalizer.setup(data_module_before)
 len_train_ds_before = len(data_module_before.val_dataloader())
@@ -80,9 +84,9 @@ for band_i in range(bands):
 after_array = []
 before_array = []
 for sample in tqdm(data_module_after.train_dataset): # IS THERE A BETTER WAY? THIS IS SLOW
-    after_array.append(np.asarray(sample[0]))
+    after_array.append(np.asarray(sample))
 for sample in tqdm(data_module_before.train_dataset):
-    before_array.append(np.asarray(sample[0]))
+    before_array.append(np.asarray(sample))
 
 before_array = np.asarray(before_array)
 after_array = np.asarray(after_array)
@@ -170,15 +174,6 @@ time_end = time.time() - time_zero
 
 print("Full evaluation took", time_total)
 print("If we include data loading", time_end)
-
-# Just one data example passing through the model:
-
-x_1 = before_data
-mu_1, log_var_1 = model.encode(x_1, verbose = True)
-
-print("input", x_1.shape)
-print("encoded as", mu_1.shape)
-print("with the variances", log_var_1.shape) # which we don't need to use for comparisons
 
 predicted_distances = np.asarray(predicted_distances).flatten()
 grid_shape = (32, 26)

@@ -43,6 +43,33 @@ def load_all_tile_indices_from_folder(settings_dataset):
     print("Loaded:", len(tiles), "total tile indices")
     return tiles
 
+def load_all_tile_indices_from_folder(settings_dataset):
+    path = settings_dataset["data_base_path"]
+
+    isDirectory = os.path.isdir(path)
+    if isDirectory:
+        # A directory, load all tifs inside
+        allfiles = glob.glob(path + "/*.tif")
+        allfiles.sort()
+    elif ".tif" in path:
+        # A single file, load that one directly
+        allfiles = [path]
+
+    tiles = []
+
+    for idx, filename in enumerate(allfiles):
+        tiles_from_file = file_to_tiles_indices(filename, settings_dataset,
+                                                tile_px_size=settings_dataset["tile_px_size"],
+                                                tile_overlap_px=settings_dataset["tile_overlap_px"],
+                                                include_last_row_colum_extra_tile=settings_dataset[
+                                                    "include_last_row_colum_extra_tile"])
+
+        tiles += tiles_from_file
+        print(idx, filename, "loaded", len(tiles_from_file), "tiles.")
+
+    print("Loaded:", len(tiles), "total tile indices")
+    return tiles
+
 def file_to_tiles_indices(filename, settings, tile_px_size=128, tile_overlap_px=4,
                           include_last_row_colum_extra_tile=True):
     """
@@ -76,6 +103,86 @@ def file_to_tiles_indices(filename, settings, tile_px_size=128, tile_overlap_px=
     tiles_indices = [[filename] + t + [tile_px_size, tile_px_size] for t in tiles]
     return tiles_indices
 
+def load_all_tile_data_from_folder(settings_dataset):
+    path = settings_dataset["data_base_path"]
+
+    isDirectory = os.path.isdir(path)
+    if isDirectory:
+        # A directory, load all tifs inside
+        allfiles = glob.glob(path + "/*.tif")
+        allfiles.sort()
+    elif ".tif" in path:
+        # A single file, load that one directly
+        allfiles = [path]
+
+    tiles = []
+
+    for idx, filename in enumerate(allfiles):
+        tiles_from_file = file_to_tiles_data(filename, settings_dataset,
+                                                tile_px_size=settings_dataset["tile_px_size"],
+                                                tile_overlap_px=settings_dataset["tile_overlap_px"],
+                                                include_last_row_colum_extra_tile=settings_dataset[
+                                                    "include_last_row_colum_extra_tile"])
+
+        tiles += tiles_from_file
+        print(idx, filename, "loaded", len(tiles_from_file), "tiles.")
+
+    print("Loaded:", len(tiles), "total tile indices")
+    return tiles
+
+def file_to_tiles_data(filename, settings, tile_px_size=128, tile_overlap_px=4,
+                          include_last_row_colum_extra_tile=True):
+    """
+    Opens one tif file and extracts all tiles (given tile size and overlap).
+    Returns list of the data directly.
+    """
+    if settings['bands'] is None:
+        # Load all
+        with rasterio.open(filename) as src:
+            tile_data = src.read()
+            filename_shape = src.height, src.width
+    else:
+        bands = [b + 1 for b in settings['bands']]
+
+        global ONCE_PRINT
+        if ONCE_PRINT:
+            print("DEBUG - loaded bands", bands)
+            ONCE_PRINT = False
+        with rasterio.open(filename) as src:
+            tile_data = src.read(bands)
+            filename_shape = src.height, src.width
+
+    data_h, data_w = filename_shape
+    if data_h < tile_px_size or data_w < tile_px_size:
+        # print("skipping, too small!")
+        return []
+
+    h_tiles_n = int(np.floor((data_h - tile_overlap_px) / (tile_px_size - tile_overlap_px)))
+    w_tiles_n = int(np.floor((data_w - tile_overlap_px) / (tile_px_size - tile_overlap_px)))
+
+    tiles_indices = []
+    for h_idx in range(h_tiles_n):
+        for w_idx in range(w_tiles_n):
+            tiles_indices.append([w_idx * (tile_px_size - tile_overlap_px), h_idx * (tile_px_size - tile_overlap_px)])
+    if include_last_row_colum_extra_tile:
+        for w_idx in range(w_tiles_n):
+            tiles_indices.append([w_idx * (tile_px_size - tile_overlap_px), data_h - tile_px_size])
+        for h_idx in range(h_tiles_n):
+            tiles_indices.append([data_w - tile_px_size, h_idx * (tile_px_size - tile_overlap_px)])
+        tiles_indices.append([data_w - tile_px_size, data_h - tile_px_size])
+
+    tiles = []
+    for tile_idx in tiles_indices:
+        y, x = tile_idx
+        w, h = tile_px_size, tile_px_size
+        tile = tile_data[:, x:x+w, y:y+h]
+        tile = np.float32(tile)
+        if settings['nan_to_num']:
+            tile = np.nan_to_num(tile)
+        tiles.append(tile)
+
+    return tiles
+
 def load_tile_idx(tile, settings):
     """
     Loads tile data values from the saved indices (file and window locations).
@@ -103,8 +210,7 @@ def load_tile_idx(tile, settings):
     if settings['nan_to_num']:
         tile_data = np.nan_to_num(tile_data)
 
-    dummy = np.zeros_like(tile_data)
-    return tile_data, dummy
+    return tile_data
 
 class DataNormalizerLogManual():
 
@@ -226,34 +332,35 @@ class DataNormalizerLogManual():
 
 class TileDataset(Dataset):
     # Main class that holds a dataset with smaller tiles originally extracted from larger geotiff files
-    # Minimal impact on memory, loads actual data of x only in __getitem__ (when loading a batch of data)
-    # Additional functionality:
-    # - Load useful statistics for its tiles (such as the number of plume pixels in the label)
-    # - Filter itself using those statistics (example: keep valid tiles, or only tiles with plumes, etc...)
-    # - Spawn filtered tiles (to later make train / test / val splits ...)
-    def __init__(self, tiles, settings_dataset, data_normalizer=None):
+    # (Optionally) Minimal impact on memory, loads actual data of x only in __getitem__ (when loading a batch of data)
+    def __init__(self, tiles, settings_dataset, data_normalizer=None, in_memory = False):
         self.tiles = tiles
         self.settings_dataset = settings_dataset
         self.data_normalizer = data_normalizer
+
+        self.in_memory = in_memory
 
     def __len__(self):
         return len(self.tiles)
 
     def __getitem__(self, idx):
-        tile = self.tiles[idx]
+        x = self.tiles[idx]
         # Load only when needed:
-        x, y = load_tile_idx(tile, self.settings_dataset)
+
+        if not self.in_memory:
+            # If not loaded fully in memory, we have to load it here
+            x = load_tile_idx(x, self.settings_dataset)
 
         if self.data_normalizer is not None:
             x = self.data_normalizer.normalize_x(x)
 
         x = torch.from_numpy(x)
-        y = torch.from_numpy(y)
-        return x, y
+        return x
 
 class DataModule(pl.LightningDataModule):
-
-    def __init__(self, settings, data_normalizer):
+    # if we set in_memory to True, it loads the data faster, but the memory may run out. If set to False, the actual
+    # data loading occurs only when tasked.
+    def __init__(self, settings, data_normalizer, in_memory=False):
         super().__init__()
         self.settings = settings
         self.data_normalizer = data_normalizer
@@ -265,6 +372,8 @@ class DataModule(pl.LightningDataModule):
         self.validation_ratio = self.settings["dataloader"]["validation_ratio"]
         self.test_ratio = self.settings["dataloader"]["test_ratio"]
 
+        self.in_memory = in_memory
+
         self.setup_finished = False
 
     def prepare_data(self):
@@ -275,8 +384,12 @@ class DataModule(pl.LightningDataModule):
         if self.setup_finished:
             return True  # to prevent double setup
 
-        tiles = load_all_tile_indices_from_folder(self.settings["dataset"])
-        print("Altogether we have", len(tiles), "tiles.")
+        if not self.in_memory:
+            tiles = load_all_tile_indices_from_folder(self.settings["dataset"])
+            print("Altogether we have", len(tiles), "tiles (loaded as indices).")
+        else:
+            tiles = load_all_tile_data_from_folder(self.settings["dataset"])
+            print("Altogether we have", len(tiles), "tiles (loaded directly).")
 
         if self.train_ratio == 1.0:
             tiles_train = tiles
@@ -289,9 +402,9 @@ class DataModule(pl.LightningDataModule):
 
         print("train, test, val:", len(tiles_train), len(tiles_test), len(tiles_val))
 
-        self.train_dataset = TileDataset(tiles_train, self.settings["dataset"], self.data_normalizer)
-        self.test_dataset = TileDataset(tiles_test, self.settings["dataset"], self.data_normalizer)
-        self.val_dataset = TileDataset(tiles_val, self.settings["dataset"], self.data_normalizer)
+        self.train_dataset = TileDataset(tiles_train, self.settings["dataset"], self.data_normalizer, self.in_memory)
+        self.test_dataset = TileDataset(tiles_test, self.settings["dataset"], self.data_normalizer, self.in_memory)
+        self.val_dataset = TileDataset(tiles_val, self.settings["dataset"], self.data_normalizer, self.in_memory)
 
         self.setup_finished = True
 
