@@ -1,9 +1,13 @@
 
 docker build -t ravaen_payload .
 
+# auto run
 docker run -it --rm -v /dev:/dev \
                 -v "/$(pwd)/weights":/weights \
                 -v "/$(pwd)/unibap_dataset":/unibap_dataset \
                 -v "/$(pwd)/results":/results \
-                -m 2g ravaen_payload bash
+                -m 2g ravaen_payload
+
+# add
+bash
 
