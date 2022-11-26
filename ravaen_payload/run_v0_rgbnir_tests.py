@@ -1,4 +1,3 @@
-
 import time
 import numpy as np
 from data_functions import DataNormalizerLogManual, DataModule
@@ -9,8 +8,8 @@ from tqdm import tqdm
 import pytorch_lightning as pl
 
 
-PATH_model_weights = "/home/vitek/Vitek/Work/Trillium - RaVAEn 2/data/model/model_rgbnir.ckpt"
-ROOT_data = "/home/vitek/Vitek/Work/Trillium - RaVAEn 2/data/sample_data/"
+PATH_model_weights = "../weights/model_rgbnir.ckpt"
+ROOT_data = "../sample_data/"
 in_memory = True # True = Fast, False = Mem efficient, slow I/O
 
 pl.seed_everything(42)
@@ -183,5 +182,5 @@ change_map_image = tiles2image(predicted_distances, grid_shape = grid_shape, ove
 import pylab as plt
 plt.imshow(change_map_image[0])
 plt.colorbar()
-plt.show()
-
+#plt.show()
+plt.savefig("../results/result.png")
