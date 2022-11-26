@@ -3,7 +3,7 @@ docker build -t ravaen_payload .
 
 docker run -it --rm -v /dev:/dev \
                 -v "/$(pwd)/weights":/weights \
-                -v "/$(pwd)/sample_data":/sample_data \
+                -v "/$(pwd)/unibap_dataset":/unibap_dataset \
                 -v "/$(pwd)/results":/results \
                 -m 2g ravaen_payload bash
 

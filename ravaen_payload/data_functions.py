@@ -16,6 +16,9 @@ import pytorch_lightning as pl
 
 ONCE_PRINT = True
 
+def available_files(root_dir="."):
+    return sorted(glob.glob(os.path.join(root_dir,"unibap_dataset/*.tif")))
+
 def load_all_tile_indices_from_folder(settings_dataset):
     path = settings_dataset["data_base_path"]
 
@@ -330,6 +333,50 @@ class DataNormalizerLogManual():
             data[band_i, :, :] = data_one_band
         return data
 
+
+def match_stats_abcd(B, a, b, c, d):
+    return (B - a) / (b - a) * (d - c) + c
+
+
+def match_GEE(B):
+    band0 = match_stats_abcd(B[0], 96, 1401, 235.0, 3422.0)
+    band1 = match_stats_abcd(B[1], 172, 1315, 427.0, 3213.0)
+    band2 = match_stats_abcd(B[2], 264, 1347, 645.0, 3290.0)
+    band3 = match_stats_abcd(B[3], 158, 2165, 401.0, 5288.0)
+    """
+    band 0 a,b,c,d 96 , 1401 , 235.0 , 3422.0
+    band 1 a,b,c,d 172 , 1315 , 427.0 , 3213.0
+    band 2 a,b,c,d 264 , 1347 , 645.0 , 3290.0
+    band 3 a,b,c,d 158 , 2165 , 401.0 , 5288.0
+    """
+
+    img_m = [band0, band1, band2, band3]
+    img_m = np.asarray(img_m)
+    # img_m = torch.stack(img_m)
+    return img_m
+
+class DataNormalizerLogManual_ExtraStep(DataNormalizerLogManual):
+    def __init__(self, settings):
+        super().__init__(settings)
+
+    def normalize_x(self, data):
+        data = match_GEE(data.astype(float))
+        bands = data.shape[0]  # for example 15
+
+        for band_i in range(bands):
+            data_one_band = data[band_i, :, :]
+            if band_i < len(self.BANDS_S2_BRIEF):
+                # log
+                data_one_band = np.log(data_one_band)
+                data_one_band[np.isinf(data_one_band)] = np.nan
+
+                # rescale
+                r = self.RESCALE_PARAMS[self.BANDS_S2_BRIEF[band_i]]
+                x0, x1, y0, y1 = r["x0"], r["x1"], r["y0"], r["y1"]
+                data_one_band = ((data_one_band - x0) / (x1 - x0)) * (y1 - y0) + y0
+            data[band_i, :, :] = data_one_band
+        return data
+
 class TileDataset(Dataset):
     # Main class that holds a dataset with smaller tiles originally extracted from larger geotiff files
     # (Optionally) Minimal impact on memory, loads actual data of x only in __getitem__ (when loading a batch of data)
@@ -368,9 +415,9 @@ class DataModule(pl.LightningDataModule):
         self.batch_size = self.settings["dataloader"]["batch_size"]
         self.num_workers = self.settings["dataloader"]["num_workers"]
 
-        self.train_ratio = self.settings["dataloader"]["train_ratio"]
-        self.validation_ratio = self.settings["dataloader"]["validation_ratio"]
-        self.test_ratio = self.settings["dataloader"]["test_ratio"]
+        self.train_ratio = 1.0
+        self.validation_ratio = 0.0
+        self.test_ratio = 0.0
 
         self.in_memory = in_memory
 

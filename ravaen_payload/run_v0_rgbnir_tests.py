@@ -1,6 +1,6 @@
 import time
 import numpy as np
-from data_functions import DataNormalizerLogManual, DataModule
+from data_functions import DataNormalizerLogManual_ExtraStep, DataModule
 from model_functions import Module, DeeperVAE
 from util_functions import which_device, tiles2image
 from anomaly_functions import twin_vae_change_score
@@ -9,25 +9,13 @@ import pytorch_lightning as pl
 
 
 PATH_model_weights = "../weights/model_rgbnir.ckpt"
-ROOT_data = "../sample_data/"
+ROOT_data = "../unibap_dataset/"
 in_memory = True # True = Fast, False = Mem efficient, slow I/O
 
 pl.seed_everything(42)
 
 ##### DATA
-
-BANDS = [2,1,0,3,4,5,6,7,8,9] # < all 10 high res bands, ps: keeping the same order is important
-# high res used:
-# channels: ['B2','B3','B4','B5','B6','B7','B8','B8A','B11','B12']
-# visualisation_channels: [2, 1, 0]
-
-# but we want:
-# channels: ['B4','B3','B2', 'B8'] # RGB + NIR (in band 8) ~ all are in ground resolution of 10m
-# visualisation_channels: [0, 1, 2]
-
-BANDS = [0,1,2,6] # either
-# BANDS = [2,1,0,6]# or
-# does this work?
+BANDS = [0,1,2,3] # Unibap format
 
 # from the original ordering > ['B1','B2','B3','B4','B5','B6','B7','B8','B8A','B9','B10','B11','B12','QA60','probability']
 
@@ -39,14 +27,14 @@ settings = {'dataloader': {
                 'test_ratio': 0.00,
             },
             'dataset': {
-                'data_base_path': ROOT_data+'gee_after',
+                'data_base_path': ROOT_data+'eopatch_id_110_col_7_row_17_05.tif',
                 'bands': BANDS, ##### < CHANGE HERE 1
                 'tile_px_size': 32,
                 'tile_overlap_px': 0,
                 'include_last_row_colum_extra_tile': False,
                 'nan_to_num': False,
              },
-            'normalizer': DataNormalizerLogManual,
+            'normalizer': DataNormalizerLogManual_ExtraStep,
            }
 
 data_normalizer = settings["normalizer"](settings)
@@ -58,7 +46,7 @@ data_normalizer.setup(data_module_after)
 len_train_ds_after = len(data_module_after.val_dataloader())
 
 settings_before = settings.copy()
-settings_before["dataset"]["data_base_path"] = ROOT_data+'gee_before' # < this one will load from the "before" folder
+settings_before["dataset"]["data_base_path"] = ROOT_data+'eopatch_id_110_col_7_row_17_04.tif' # < this one will load from the "before" folder
 data_module_before = DataModule(settings_before, data_normalizer, in_memory)
 data_module_before.setup()
 data_normalizer.setup(data_module_before)
@@ -91,8 +79,8 @@ before_array = np.asarray(before_array)
 after_array = np.asarray(after_array)
 
 import torch
-before_array = torch.as_tensor(before_array)
-after_array = torch.as_tensor(after_array)
+before_array = torch.as_tensor(before_array).float()
+after_array = torch.as_tensor(after_array).float()
 
 # Note: this is something we would have in the numpy pre-processed files .npy
 
@@ -175,8 +163,7 @@ print("Full evaluation took", time_total)
 print("If we include data loading", time_end)
 
 predicted_distances = np.asarray(predicted_distances).flatten()
-grid_shape = (32, 26)
-grid_shape = (20, 20) # 400
+grid_shape = (15, 15)
 change_map_image = tiles2image(predicted_distances, grid_shape = grid_shape, overlap=0, tile_size = 32)
 
 import pylab as plt
