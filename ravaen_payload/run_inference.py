@@ -1,7 +1,7 @@
 import math
 import time
 import numpy as np
-from data_functions import DataNormalizerLogManual_ExtraStep, load_data_array_with_dataloaders, available_files
+from data_functions import DataNormalizerLogManual_ExtraStep, load_data_array_with_dataloaders, load_data_array_simple, available_files
 from model_functions import Module, DeeperVAE
 from util_functions import which_device, seed_all_torch_numpy_random
 from save_functions import save_latents, save_change, plot_change
@@ -78,7 +78,8 @@ def main(settings):
     for file_i, file_path in enumerate(selected_files):
         previous_file = file_i - 1
 
-        data_array = load_data_array_with_dataloaders(settings_dataloader, file_path, in_memory)
+        # data_array = load_data_array_with_dataloaders(settings_dataloader, file_path, in_memory)
+        data_array = load_data_array_simple(settings_dataloader, file_path)
 
         # get latents and save them
         # use them to calculate change map in comparison with the previous image in sequence

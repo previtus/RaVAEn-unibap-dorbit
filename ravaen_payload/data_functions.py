@@ -493,3 +493,15 @@ def load_data_array_with_dataloaders(settings_dataloader, file_path, in_memory):
 
     return data_array
 
+def load_data_array_simple(settings_dataloader, file_path):
+    tiles = file_to_tiles_data(file_path, settings_dataloader["dataset"], tile_px_size=32, tile_overlap_px=0, include_last_row_colum_extra_tile=False)
+    data_normalizer = DataNormalizerLogManual_ExtraStep(None)
+    data_normalizer.setup(None)
+
+    tiles = np.asarray(tiles)
+    data_array = [data_normalizer.normalize_x(tile) for tile in tiles]
+    data_array = np.asarray(data_array)
+    data_array = torch.as_tensor(data_array).float()
+
+    return data_array
+
