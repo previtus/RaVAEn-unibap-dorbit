@@ -19,6 +19,9 @@ ONCE_PRINT = True
 def available_files(root_dir="."):
     return sorted(glob.glob(os.path.join(root_dir,"*.tif")))
 
+def available_result_files(root_dir="."):
+    return sorted(glob.glob(os.path.join(root_dir,"latent*.npy")))
+
 def load_all_tile_indices_from_folder(settings_dataset):
     path = settings_dataset["data_base_path"]
 
@@ -218,7 +221,6 @@ def load_tile_idx(tile, settings):
 class DataNormalizerLogManual():
 
     def __init__(self, settings):
-        self.settings_dataset = settings["dataset"]
         self.normalization_parameters = None
 
     def setup(self, data_module):
@@ -471,3 +473,23 @@ class DataModule(pl.LightningDataModule):
         num_workers = num_workers or self.num_workers
         return DataLoader(self.test_dataset, batch_size=self.batch_size,
                           shuffle=False, num_workers=num_workers)
+
+
+def load_data_array_with_dataloaders(settings_dataloader, file_path, in_memory):
+    # load data of this file
+    settings_dataloader_local = settings_dataloader.copy()
+    settings_dataloader_local["dataset"]["data_base_path"] = file_path
+
+    data_normalizer = settings_dataloader["normalizer"](settings_dataloader)
+    data_module_local = DataModule(settings_dataloader_local, data_normalizer, in_memory)
+    data_module_local.setup()
+    data_normalizer.setup(data_module_local)
+
+    data_array = []
+    for sample in data_module_local.train_dataset:
+        data_array.append(np.asarray(sample))
+    data_array = np.asarray(data_array)
+    data_array = torch.as_tensor(data_array).float()
+
+    return data_array
+

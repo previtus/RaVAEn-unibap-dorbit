@@ -3,10 +3,14 @@ import math
 import pylab as plt
 
 
-def save_latents(latents, file_i):
+def save_latents(latents, file_i, log_var=False):
     # save the dictionary of latents belonging to ith file in the sequence
     latents = latents.detach().cpu().numpy()
-    path = "../results/latent_"+str(file_i).zfill(3)+".npy"
+
+    add = ""
+    if log_var:
+        add = "_logvar"
+    path = "../results/latent_"+str(file_i).zfill(3)+add+".npy"
 
     np.save(path, latents)
 

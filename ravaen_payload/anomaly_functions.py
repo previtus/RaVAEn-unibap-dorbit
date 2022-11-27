@@ -47,16 +47,19 @@ def twin_vae_change_score(model, x_1, x_2, verbose=False):
     return distance
 
 
-def encode_tile(model, x):
+def encode_tile(model, x, keep_latent_log_var):
+    var = None
     x = x.unsqueeze(0) # into a list
     if "VAE" in str(model.__class__):
         with torch.no_grad():
-            mu, _ = model.encode(x, only_mu=True)  # batch, latent_dim
+            mu, var = model.encode(x, only_mu=(not keep_latent_log_var))  # batch, latent_dim
     else:
         assert False, "To be implemented!"
 
     mu = mu[0] # back into just one
-    return mu
+    if keep_latent_log_var:
+        var = var[0] # back into just one
+    return mu, var
 
 def twin_vae_change_score_from_latents(mu_1, mu_2):
     distance = cosine_distance_score(mu_1, mu_2)

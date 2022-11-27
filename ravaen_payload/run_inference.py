@@ -1,7 +1,7 @@
 import math
 import time
 import numpy as np
-from data_functions import DataNormalizerLogManual_ExtraStep, DataModule, available_files
+from data_functions import DataNormalizerLogManual_ExtraStep, load_data_array_with_dataloaders, available_files
 from model_functions import Module, DeeperVAE
 from util_functions import which_device, seed_all_torch_numpy_random
 from save_functions import save_latents, save_change, plot_change
@@ -12,6 +12,7 @@ import pylab as plt
 
 BANDS = [0,1,2,3] # Unibap format
 LATENT_SIZE = 128
+keep_latent_log_var = True # if we want to reconstruct the results, then we need them... then keep to True
 
 settings_dataloader = {'dataloader': {
                 'batch_size': 8,
@@ -46,7 +47,7 @@ model_cls_args_VAE = {
 def main(settings):
     print("settings:", settings)
 
-    files_sequence = available_files("../unibap_dataset/")
+    files_sequence = available_files(settings["folder"])
     selected_idx = [int(idx) for idx in settings["selected_images"].split(",")]
     assert len(selected_idx) <= len(files_sequence), f"Selected more indices than how many we have images!"
     selected_files = []
@@ -62,6 +63,8 @@ def main(settings):
     module = Module(DeeperVAE, cfg_module, cfg_train, model_cls_args_VAE)
     module.model.encoder.load_state_dict(torch.load(settings["model"]+"_encoder.pt"))
     module.model.fc_mu.load_state_dict(torch.load(settings["model"]+"_fc_mu.pt"))
+    if keep_latent_log_var:
+        module.model.fc_var.load_state_dict(torch.load(settings["model"]+"_fc_var.pt"))
 
     print("Loaded model!")
     module.model.eval()
@@ -75,20 +78,7 @@ def main(settings):
     for file_i, file_path in enumerate(selected_files):
         previous_file = file_i - 1
 
-        # load data of this file
-        settings_dataloader_local = settings_dataloader.copy()
-        settings_dataloader_local["dataset"]["data_base_path"] = file_path
-
-        data_normalizer = settings_dataloader["normalizer"](settings_dataloader)
-        data_module_local = DataModule(settings_dataloader_local, data_normalizer, in_memory)
-        data_module_local.setup()
-        data_normalizer.setup(data_module_local)
-
-        data_array = []
-        for sample in data_module_local.train_dataset:
-            data_array.append(np.asarray(sample))
-        data_array = np.asarray(data_array)
-        data_array = torch.as_tensor(data_array).float()
+        data_array = load_data_array_with_dataloaders(settings_dataloader, file_path, in_memory)
 
         # get latents and save them
         # use them to calculate change map in comparison with the previous image in sequence
@@ -101,18 +91,20 @@ def main(settings):
 
         tiles_n = len(data_array)
         latents = torch.zeros((tiles_n,LATENT_SIZE))
+        latents_log_var = torch.zeros((tiles_n,LATENT_SIZE))
 
         for tile_i, tile_data in enumerate(data_array):
 
             start_time = time.time()
-            latent = encode_tile(model, tile_data)
-            latents[ tile_i ] = latent
+            latent_mu, latent_log_var = encode_tile(model, tile_data, keep_latent_log_var)
+            latents[ tile_i ] = latent_mu
+            if keep_latent_log_var: latents_log_var[ tile_i ] = latent_log_var
             encode_time = time.time() - start_time
 
             if previous_file in latents_per_file:
                 previous_latent = latents_per_file[previous_file][tile_i]
 
-                distance = compare_func(latent.unsqueeze(0), previous_latent.unsqueeze(0))
+                distance = compare_func(latent_mu.unsqueeze(0), previous_latent.unsqueeze(0))
                 predicted_distances.append(distance)
                 if time_total == 0: print("Distance", distance, )
 
@@ -123,6 +115,7 @@ def main(settings):
             time_total += single_eval
 
         save_latents(latents, file_i)
+        if keep_latent_log_var: save_latents(latents_log_var, file_i, log_var=True)
 
         latents_per_file[file_i] = latents
 
