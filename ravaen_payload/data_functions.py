@@ -12,7 +12,6 @@ from torch.utils.data import Dataset
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
-import pytorch_lightning as pl
 
 ONCE_PRINT = True
 
@@ -20,7 +19,7 @@ def available_files(root_dir="."):
     return sorted(glob.glob(os.path.join(root_dir,"*.tif")))
 
 def available_result_files(root_dir="."):
-    return sorted(glob.glob(os.path.join(root_dir,"latent*.npy")))
+    return sorted(glob.glob(os.path.join(root_dir,"*.npy")))
 
 def load_all_tile_indices_from_folder(settings_dataset):
     path = settings_dataset["data_base_path"]
@@ -406,7 +405,7 @@ class TileDataset(Dataset):
         x = torch.from_numpy(x)
         return x
 
-class DataModule(pl.LightningDataModule):
+class DataModule(torch.nn.Module): # torch.nn.Module # pl.LightningDataModule
     # if we set in_memory to True, it loads the data faster, but the memory may run out. If set to False, the actual
     # data loading occurs only when tasked.
     def __init__(self, settings, data_normalizer, in_memory=False):

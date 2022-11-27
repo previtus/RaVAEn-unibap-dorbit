@@ -8,11 +8,13 @@ from save_functions import save_latents, save_change, plot_change
 from anomaly_functions import encode_tile, twin_vae_change_score_from_latents
 from argparse import Namespace
 import torch
-import pylab as plt
 
 BANDS = [0,1,2,3] # Unibap format
 LATENT_SIZE = 128
 keep_latent_log_var = True # if we want to reconstruct the results, then we need them... then keep to True
+
+RECONSTRUCT = False
+PLOT_CHANGE_MAPS = True
 
 settings_dataloader = {'dataloader': {
                 'batch_size': 8,
@@ -66,38 +68,50 @@ def main(settings):
     data_normalizer = DataNormalizerLogManual_ExtraStep(None)
     data_normalizer.setup(None)
 
-    latent_mus = [f for f in result_files if "logvar" not in f]
-    latent_logvar = [f for f in result_files if "logvar" in f]
+    latent_mus = [f for f in result_files if "logvar" not in f and "latent" in f]
+    latent_logvar = [f for f in result_files if "logvar" in f and "latent" in f]
+    change_maps = [f for f in result_files if "changemap" in f]
 
-    assert len(latent_mus) == len(latent_logvar), f"Need the same number of latents for mus and logvars!"
+    if PLOT_CHANGE_MAPS:
+        for change_i, change_map in enumerate(change_maps):
+            print(change_map)
+            change_map_data = np.load(change_map)
+            change_map_data = change_map_data.flatten()
+            print(change_map_data.shape)
 
-    print(latent_mus)
-    print(latent_logvar)
+            plot_change(change_map_data, change_i, change_i+1)
 
-    for latent_i in range(len(latent_mus)):
-        mus, logvars = np.load(latent_mus[latent_i]), np.load(latent_logvar[latent_i])
+    if RECONSTRUCT:
 
-        reconstructions = []
-        for tile_i in range(len(mus)):
-            mu, log_var = mus[tile_i], logvars[tile_i]
+        assert len(latent_mus) == len(latent_logvar), f"Need the same number of latents for mus and logvars!"
 
-            mu = torch.as_tensor(mu).float()
-            log_var = torch.as_tensor(log_var).float()
+        print(latent_mus)
+        print(latent_logvar)
 
-            z = model.reparameterize(mu, log_var)
-            reconstruction = model.decode(z)
+        for latent_i in range(len(latent_mus)):
+            mus, logvars = np.load(latent_mus[latent_i]), np.load(latent_logvar[latent_i])
 
-            reconstruction = reconstruction.detach().cpu().numpy()
-            reconstructions.append(reconstruction[0])
+            reconstructions = []
+            for tile_i in range(len(mus)):
+                mu, log_var = mus[tile_i], logvars[tile_i]
 
-        # denormalise ...
-        # reconstructions = [data_normalizer.denormalize_x(tile) for tile in reconstructions]
-        reconstructions = np.asarray(reconstructions)
+                mu = torch.as_tensor(mu).float()
+                log_var = torch.as_tensor(log_var).float()
 
-        print("reconstruction for latent", latent_i, "we get", reconstructions.shape)
-        # (225, 4, 32, 32) > into a preview image ...
+                z = model.reparameterize(mu, log_var)
+                reconstruction = model.decode(z)
 
-        tiles2image_DEBUG(reconstructions, denormalise=True)
+                reconstruction = reconstruction.detach().cpu().numpy()
+                reconstructions.append(reconstruction[0])
+
+            # denormalise ...
+            # reconstructions = [data_normalizer.denormalize_x(tile) for tile in reconstructions]
+            reconstructions = np.asarray(reconstructions)
+
+            print("reconstruction for latent", latent_i, "we get", reconstructions.shape)
+            # (225, 4, 32, 32) > into a preview image ...
+
+            tiles2image_DEBUG(reconstructions, denormalise=True)
 
 
 if __name__ == "__main__":

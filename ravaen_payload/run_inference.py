@@ -8,12 +8,12 @@ from save_functions import save_latents, save_change, plot_change
 from anomaly_functions import encode_tile, twin_vae_change_score_from_latents
 from argparse import Namespace
 import torch
-import pylab as plt
 
 BANDS = [0,1,2,3] # Unibap format
 LATENT_SIZE = 128
 keep_latent_log_var = False
 # if we want to reconstruct the results, then we need them... but for just distances we don't care
+plot = False # if set to True, needs matplotlib
 
 settings_dataloader = {'dataloader': {
                 'batch_size': 8,
@@ -140,7 +140,7 @@ def main(settings):
         if len(predicted_distances) > 0:
             predicted_distances = np.asarray(predicted_distances).flatten()
             save_change(predicted_distances, previous_file, file_i)
-            plot_change(predicted_distances, previous_file, file_i)
+            if plot: plot_change(predicted_distances, previous_file, file_i)
 
 if __name__ == "__main__":
     import argparse

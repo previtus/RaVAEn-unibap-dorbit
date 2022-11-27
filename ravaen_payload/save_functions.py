@@ -1,7 +1,5 @@
 import numpy as np
 import math
-import pylab as plt
-
 
 def save_latents(latents, file_i, log_var=False):
     # save the dictionary of latents belonging to ith file in the sequence
@@ -28,6 +26,7 @@ def plot_change(change_distances, previous_file, file_i):
     grid_shape = (grid_size, grid_size)
     change_map_image = tiles2image(change_distances, grid_shape=grid_shape, overlap=0, tile_size=32)
 
+    import pylab as plt
     plt.imshow(change_map_image[0])
     plt.colorbar()
     plt.tight_layout()
