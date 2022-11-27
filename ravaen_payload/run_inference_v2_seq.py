@@ -3,14 +3,16 @@ import time
 import numpy as np
 from data_functions import DataNormalizerLogManual_ExtraStep, DataModule, available_files
 from model_functions import Module, DeeperVAE
-from util_functions import which_device, tiles2image, seed_all_torch_numpy_random, sequence2pairs
-from anomaly_functions import twin_vae_change_score
-import pytorch_lightning as pl
+from util_functions import which_device, seed_all_torch_numpy_random
+from save_functions import save_latents, save_change, plot_change
+from anomaly_functions import encode_tile, twin_vae_change_score_from_latents
 from argparse import Namespace
 import torch
 import pylab as plt
 
 BANDS = [0,1,2,3] # Unibap format
+LATENT_SIZE = 128
+
 settings_dataloader = {'dataloader': {
                 'batch_size': 8,
                 'num_workers': 4,
@@ -27,16 +29,16 @@ settings_dataloader = {'dataloader': {
            }
 cfg_module = {"input_shape": (4, 32, 32),
               "visualisation_channels": [0, 1, 2],
-              "len_train_ds": 400,
-              "len_val_ds": 0,
+              "len_train_ds": 1, "len_val_ds": 1,
 }
 model_cls_args_VAE = {
         # Using Small model:
         "hidden_channels": [16, 32, 64], # number of channels after each downscale. Reversed on upscale
-        "latent_dim": 128,                # bottleneck size
+        "latent_dim": LATENT_SIZE,                # bottleneck size
         "extra_depth_on_scale": 0,        # after each downscale and upscale, this many convolutions are applied
         "visualisation_channels": cfg_module["visualisation_channels"],
 }
+
 
 ############################################################################
 
@@ -52,9 +54,7 @@ def main(settings):
         selected_files.append(files_sequence[idx])
 
     print("Will run on a sequence of:", selected_files)
-    pair_files = sequence2pairs(selected_files)
 
-    # pl.seed_everything(42)
     seed_all_torch_numpy_random(42)
 
     ### MODEL
@@ -66,84 +66,79 @@ def main(settings):
     module.load_from_checkpoint(checkpoint_path=settings["model"], hparams=namespace,
                                 model_cls=DeeperVAE, train_cfg=cfg_train, model_cls_args=model_cls_args_VAE)
     print("Loaded model!")
+    model = module.model
+    model.eval()
+    device = which_device(model)
 
     ### DATA
     in_memory = True  # True = Fast, False = Mem efficient, slow I/O
 
-    for pair_id, pair in enumerate(pair_files):
-        print("Running CD for the pair", pair_id, "between", pair)
-        before_path = pair[0]
-        after_path = pair[1]
+    latents_per_file = {}
+    for file_i, file_path in enumerate(selected_files):
+        previous_file = file_i - 1
 
-        settings_dataloader_after = settings_dataloader.copy()
-        settings_dataloader_after["dataset"]["data_base_path"] = after_path
+        # load data of this file
+        settings_dataloader_local = settings_dataloader.copy()
+        settings_dataloader_local["dataset"]["data_base_path"] = file_path
 
         data_normalizer = settings_dataloader["normalizer"](settings_dataloader)
-        data_module_after = DataModule(settings_dataloader_after, data_normalizer, in_memory)
-        data_module_after.setup()
-        data_normalizer.setup(data_module_after)
+        data_module_local = DataModule(settings_dataloader_local, data_normalizer, in_memory)
+        data_module_local.setup()
+        data_normalizer.setup(data_module_local)
 
-        settings_dataloader_before = settings_dataloader.copy()
-        settings_dataloader_before["dataset"]["data_base_path"] = before_path
+        data_array = []
+        for sample in data_module_local.train_dataset:
+            data_array.append(np.asarray(sample))
+        data_array = np.asarray(data_array)
+        data_array = torch.as_tensor(data_array).float()
 
-        data_module_before = DataModule(settings_dataloader_before, data_normalizer, in_memory)
-        data_module_before.setup()
-        data_normalizer.setup(data_module_before)
+        # get latents and save them
+        # use them to calculate change map in comparison with the previous image in sequence
 
-        ### LATENTS
-        model = module.model
-        model.eval()
-
-        device = which_device(model)
-        compare_func = twin_vae_change_score
+        compare_func = twin_vae_change_score_from_latents
         time_total = 0
         time_zero = time.time()
 
         predicted_distances = []
 
-        after_array = []
-        before_array = []
-        for sample in data_module_after.train_dataset:
-            after_array.append(np.asarray(sample))
-        for sample in data_module_before.train_dataset:
-            before_array.append(np.asarray(sample))
-        before_array = np.asarray(before_array)
-        after_array = np.asarray(after_array)
-        before_array = torch.as_tensor(before_array).float()
-        after_array = torch.as_tensor(after_array).float()
+        tiles_n = len(data_array)
+        latents = torch.zeros((tiles_n,LATENT_SIZE))
 
-        for before, after in zip(before_array, after_array):
-            before_data = before.unsqueeze(0)
-            after_data = after.unsqueeze(0)
+        for tile_i, tile_data in enumerate(data_array):
 
             start_time = time.time()
+            latent = encode_tile(model, tile_data)
+            latents[ tile_i ] = latent
+            encode_time = time.time() - start_time
 
-            distances = compare_func(model, before_data, after_data)
-            predicted_distances.append(distances)
+            if previous_file in latents_per_file:
+                previous_latent = latents_per_file[previous_file][tile_i]
 
-            if time_total == 0: print("Distances", distances, )
+                distance = compare_func(latent.unsqueeze(0), previous_latent.unsqueeze(0))
+                predicted_distances.append(distance)
+                if time_total == 0: print("Distance", distance, )
 
+            compare_time = time.time() - encode_time
             end_time = time.time()
             single_eval = (end_time - start_time)
-            if time_total == 0: print("Single evaluation took ", single_eval)
+            if time_total == 0: print("Single evaluation took ", single_eval, " = encode ", encode_time, " + compare", compare_time)
             time_total += single_eval
+
+        save_latents(latents, file_i)
+
+        latents_per_file[file_i] = latents
+
+        if previous_file in latents_per_file: del latents_per_file[previous_file] # longer history no longer needed
 
         time_end = time.time() - time_zero
 
-        print("Full evaluation took", time_total)
+        print("Full evaluation of file",file_i,"took", time_total)
         print("If we include data loading", time_end)
 
-        predicted_distances = np.asarray(predicted_distances).flatten()
-
-        grid_size = int(math.sqrt(len(predicted_distances))) # all were square
-        grid_shape = (grid_size, grid_size)
-        change_map_image = tiles2image(predicted_distances, grid_shape = grid_shape, overlap=0, tile_size = 32)
-
-        plt.imshow(change_map_image[0])
-        plt.colorbar()
-        plt.savefig("../results/pair_"+str(pair_id).zfill(3)+"_result.png")
-        plt.close()
-
+        if len(predicted_distances) > 0:
+            predicted_distances = np.asarray(predicted_distances).flatten()
+            save_change(predicted_distances, previous_file, file_i)
+            plot_change(predicted_distances, previous_file, file_i)
 
 if __name__ == "__main__":
     import argparse
