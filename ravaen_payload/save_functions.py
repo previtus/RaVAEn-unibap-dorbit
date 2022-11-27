@@ -26,6 +26,7 @@ def plot_change(change_distances, previous_file, file_i):
 
     plt.imshow(change_map_image[0])
     plt.colorbar()
+    plt.tight_layout()
     plt.savefig("../results/pair_" + str(previous_file).zfill(3) + "-" + str(file_i).zfill(3) + "_result.png")
     plt.close()
 

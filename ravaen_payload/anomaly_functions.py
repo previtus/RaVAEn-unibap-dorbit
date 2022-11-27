@@ -51,7 +51,7 @@ def encode_tile(model, x):
     x = x.unsqueeze(0) # into a list
     if "VAE" in str(model.__class__):
         with torch.no_grad():
-            mu, log_var = model.encode(x)  # batch, latent_dim
+            mu, _ = model.encode(x, only_mu=True)  # batch, latent_dim
     else:
         assert False, "To be implemented!"
 

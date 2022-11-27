@@ -60,15 +60,13 @@ def main(settings):
     ### MODEL
     cfg_train = {}
     module = Module(DeeperVAE, cfg_module, cfg_train, model_cls_args_VAE)
-    hparams = {}
-    namespace = Namespace(**hparams)
+    module.model.encoder.load_state_dict(torch.load(settings["model"]+"_encoder.pt"))
+    module.model.fc_mu.load_state_dict(torch.load(settings["model"]+"_fc_mu.pt"))
 
-    module.load_from_checkpoint(checkpoint_path=settings["model"], hparams=namespace,
-                                model_cls=DeeperVAE, train_cfg=cfg_train, model_cls_args=model_cls_args_VAE)
     print("Loaded model!")
+    module.model.eval()
     model = module.model
-    model.eval()
-    device = which_device(model)
+    # device = which_device(model)
 
     ### DATA
     in_memory = True  # True = Fast, False = Mem efficient, slow I/O
@@ -118,7 +116,7 @@ def main(settings):
                 predicted_distances.append(distance)
                 if time_total == 0: print("Distance", distance, )
 
-            compare_time = time.time() - encode_time
+            compare_time = (time.time() - start_time) - encode_time
             end_time = time.time()
             single_eval = (end_time - start_time)
             if time_total == 0: print("Single evaluation took ", single_eval, " = encode ", encode_time, " + compare", compare_time)
@@ -148,7 +146,7 @@ if __name__ == "__main__":
                         help="Full path to local folder with Sentinel-2 files")
     parser.add_argument('--selected_images', default="0,1,2",
                         help="Indices to the files we want to use. Files will be processed sequentially, each pair evaluated for changes.")
-    parser.add_argument('--model', default='../weights/model_rgbnir.ckpt',
+    parser.add_argument('--model', default='../weights/model_rgbnir',
                         help="Path to the model weights")
     # parser.add_argument('--time-limit', type=int, default=300,
     #                     help="time limit for running inference [300]")

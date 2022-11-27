@@ -8,8 +8,6 @@ from typing import Any
 import numpy as np
 import torch
 from torch import optim
-import pytorch_lightning as pl
-
 
 class BaseModel(nn.Module):
     @abstractmethod
@@ -584,7 +582,7 @@ class DeeperVAE(BaseVAE):
 
         return nn.Sequential(*decoder)
 
-    def encode(self, input: Tensor, verbose=False) -> List[Tensor]:
+    def encode(self, input: Tensor, verbose=False, only_mu=False) -> List[Tensor]:
         """
         Encodes the input by passing through the encoder network
         and returns the latent codes.
@@ -608,7 +606,12 @@ class DeeperVAE(BaseVAE):
         # of the latent Gaussian distribution
         mu = self.fc_mu(result)
         if verbose: print("mu", self.fc_mu, " => it's output:\n", mu.shape)
-        log_var = self.fc_var(result)
+
+        if only_mu:
+            # speed up if I don't care about the var
+            log_var = None
+        else:
+            log_var = self.fc_var(result)
         if verbose: print("log_var", self.fc_var, " => it's output:\n", log_var.shape)
 
         return [mu, log_var]
@@ -695,7 +698,7 @@ class DeeperVAE(BaseVAE):
 
         return self.forward(x)[0]
 
-class Module(pl.LightningModule):
+class Module(torch.nn.Module):
     def __init__(self, model_cls, cfg: dict, train_cfg: dict, model_cls_args: dict) -> None:
         super().__init__()
         self.__dict__.update(cfg)
