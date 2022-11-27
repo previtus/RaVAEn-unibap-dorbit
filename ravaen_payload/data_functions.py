@@ -499,9 +499,50 @@ def load_data_array_simple(settings_dataloader, file_path):
     data_normalizer.setup(None)
 
     tiles = np.asarray(tiles)
+
+    # tiles2image_DEBUG(tiles)
+
     data_array = [data_normalizer.normalize_x(tile) for tile in tiles]
     data_array = np.asarray(data_array)
+
+    # tiles2image_DEBUG(data_array, denormalise=True)
+
     data_array = torch.as_tensor(data_array).float()
 
     return data_array
 
+
+def tiles2image_DEBUG(tiles, denormalise = False):
+    print("debug showing as", tiles.shape, tiles.dtype)
+    print("rages min,mean,max", np.min(tiles), np.mean(tiles), np.max(tiles))
+
+    if denormalise:
+        data_normalizer = DataNormalizerLogManual_ExtraStep(None)
+        data_normalizer.setup(None)
+        tiles = [data_normalizer.denormalize_x(tile) for tile in tiles]
+        tiles = np.asarray(tiles)
+
+    tiles_n, channels, tile_size, _ = tiles.shape
+    side = int(math.sqrt(tiles_n))  # 15
+
+    grid_shape = (side, side)
+    image = np.zeros((channels, grid_shape[1] * tile_size, grid_shape[0] * tile_size), dtype=np.float32)
+    index = 0
+    for i in range(grid_shape[1]):
+        for j in range(grid_shape[0]):
+            tile = tiles[index]
+            image[:, i * tile_size:(i + 1) * tile_size, j * tile_size:(j + 1) * tile_size] = tile
+            index += 1
+    print("image", image.shape)  # reconstruction has lost some sizes ...
+
+    image_for_plot = np.moveaxis(image[0:3], 0, -1)
+    image_for_plot = image_for_plot / 2000.0
+    print("shape, min, max", image_for_plot.shape, np.min(image_for_plot), np.max(image_for_plot))
+    # image_for_plot = image_for_plot * 1000.0
+
+    import pylab as plt
+    plt.imshow(image_for_plot)
+    plt.colorbar()
+    plt.tight_layout()
+    plt.show()
+    plt.close()

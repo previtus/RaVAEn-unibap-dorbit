@@ -698,6 +698,9 @@ class DeeperVAE(BaseVAE):
 
         return self.forward(x)[0]
 
+
+# import pytorch_lightning as pl
+# class Module(pl.LightningModule):
 class Module(torch.nn.Module):
     def __init__(self, model_cls, cfg: dict, train_cfg: dict, model_cls_args: dict) -> None:
         super().__init__()
@@ -777,3 +780,24 @@ class Module(torch.nn.Module):
             scheds.append(scheduler2)
 
         return optims, scheds
+
+# def reconstruct_with_model(model, mus, log_vars):
+#     print("reconstructing with", model, "from", mus.shape, log_vars.shape)
+#
+#     reconstructions = []
+#     for tile_i in range(len(mus)):
+#         mu, log_var = mus[tile_i], log_vars[tile_i]
+#
+#         mu = torch.as_tensor(mu).float()
+#         log_var = torch.as_tensor(log_var).float()
+#
+#         z = model.reparameterize(mu, log_var)
+#         reconstruction = model.decode(z)
+#         reconstruction = reconstruction.detach().cpu().numpy()
+#         reconstructions.append(reconstruction[0])
+#
+#     reconstructions = np.asarray(reconstructions)
+#     # (225, 4, 32, 32) > into a preview image ...
+#     from data_functions import tiles2image_DEBUG
+#     tiles2image_DEBUG(reconstructions, denormalise=True)
+

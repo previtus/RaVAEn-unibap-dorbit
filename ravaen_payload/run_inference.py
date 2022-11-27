@@ -1,7 +1,7 @@
 import math
 import time
 import numpy as np
-from data_functions import DataNormalizerLogManual_ExtraStep, load_data_array_with_dataloaders, load_data_array_simple, available_files
+from data_functions import DataNormalizerLogManual_ExtraStep, DataNormalizerLogManual, load_data_array_with_dataloaders, load_data_array_simple, available_files
 from model_functions import Module, DeeperVAE
 from util_functions import which_device, seed_all_torch_numpy_random
 from save_functions import save_latents, save_change, plot_change
@@ -12,7 +12,8 @@ import pylab as plt
 
 BANDS = [0,1,2,3] # Unibap format
 LATENT_SIZE = 128
-keep_latent_log_var = True # if we want to reconstruct the results, then we need them... then keep to True
+keep_latent_log_var = False
+# if we want to reconstruct the results, then we need them... but for just distances we don't care
 
 settings_dataloader = {'dataloader': {
                 'batch_size': 8,
@@ -60,11 +61,20 @@ def main(settings):
 
     ### MODEL
     cfg_train = {}
+    # Just Torch
     module = Module(DeeperVAE, cfg_module, cfg_train, model_cls_args_VAE)
     module.model.encoder.load_state_dict(torch.load(settings["model"]+"_encoder.pt"))
     module.model.fc_mu.load_state_dict(torch.load(settings["model"]+"_fc_mu.pt"))
     if keep_latent_log_var:
         module.model.fc_var.load_state_dict(torch.load(settings["model"]+"_fc_var.pt"))
+
+    # # TorchLightning
+    # module = Module(DeeperVAE, cfg_module, cfg_train, model_cls_args_VAE)
+    # hparams = {}
+    # namespace = Namespace(**hparams)
+    # checkpoint_path="/home/vitek/Vitek/Work/Trillium_RaVAEn_2/codes/RaVAEn-unibap-dorbit/_model resaved/model_rgbnir.ckpt"
+    # module.load_from_checkpoint(checkpoint_path=checkpoint_path, hparams=namespace,
+    #                             model_cls=DeeperVAE, train_cfg=cfg_train, model_cls_args=model_cls_args_VAE)
 
     print("Loaded model!")
     module.model.eval()
@@ -95,9 +105,9 @@ def main(settings):
         latents_log_var = torch.zeros((tiles_n,LATENT_SIZE))
 
         for tile_i, tile_data in enumerate(data_array):
-
             start_time = time.time()
             latent_mu, latent_log_var = encode_tile(model, tile_data, keep_latent_log_var)
+
             latents[ tile_i ] = latent_mu
             if keep_latent_log_var: latents_log_var[ tile_i ] = latent_log_var
             encode_time = time.time() - start_time

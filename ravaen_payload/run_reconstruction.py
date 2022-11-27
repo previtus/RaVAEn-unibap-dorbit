@@ -1,7 +1,7 @@
 import math
 import time
 import numpy as np
-from data_functions import DataNormalizerLogManual_ExtraStep, load_data_array_with_dataloaders, available_result_files
+from data_functions import DataNormalizerLogManual_ExtraStep, tiles2image_DEBUG, available_result_files
 from model_functions import Module, DeeperVAE
 from util_functions import which_device, seed_all_torch_numpy_random
 from save_functions import save_latents, save_change, plot_change
@@ -63,6 +63,9 @@ def main(settings):
     model = module.model
     # device = which_device(model)
 
+    data_normalizer = DataNormalizerLogManual_ExtraStep(None)
+    data_normalizer.setup(None)
+
     latent_mus = [f for f in result_files if "logvar" not in f]
     latent_logvar = [f for f in result_files if "logvar" in f]
 
@@ -83,12 +86,18 @@ def main(settings):
 
             z = model.reparameterize(mu, log_var)
             reconstruction = model.decode(z)
-            reconstruction = reconstruction.detach().cpu().numpy()
-            reconstructions.append(reconstruction)
 
+            reconstruction = reconstruction.detach().cpu().numpy()
+            reconstructions.append(reconstruction[0])
+
+        # denormalise ...
+        # reconstructions = [data_normalizer.denormalize_x(tile) for tile in reconstructions]
         reconstructions = np.asarray(reconstructions)
+
         print("reconstruction for latent", latent_i, "we get", reconstructions.shape)
-        # (225, 1, 4, 32, 32) > into a preview image ...
+        # (225, 4, 32, 32) > into a preview image ...
+
+        tiles2image_DEBUG(reconstructions, denormalise=True)
 
 
 if __name__ == "__main__":
