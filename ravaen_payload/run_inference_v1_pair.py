@@ -127,7 +127,7 @@ def main(settings):
 
 if __name__ == "__main__":
     import argparse
-    s2files = available_files("../")
+    s2files = available_files("../unibap_dataset/")
     assert len(s2files) > 0, f"Not found files in S2 folder!!"
 
     parser = argparse.ArgumentParser('Run inference')

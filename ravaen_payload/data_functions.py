@@ -17,7 +17,7 @@ import pytorch_lightning as pl
 ONCE_PRINT = True
 
 def available_files(root_dir="."):
-    return sorted(glob.glob(os.path.join(root_dir,"unibap_dataset/*.tif")))
+    return sorted(glob.glob(os.path.join(root_dir,"*.tif")))
 
 def load_all_tile_indices_from_folder(settings_dataset):
     path = settings_dataset["data_base_path"]
