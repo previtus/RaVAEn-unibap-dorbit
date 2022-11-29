@@ -1,11 +1,9 @@
-import pytorch_lightning as pl
+# import pytorch_lightning as pl
 import torch.nn as nn
-import torch.nn.functional as F
 import torch
 from torch.utils.data import Dataset
-from torch.utils.data import DataLoader
 
-class LilModel(pl.LightningModule):
+class LilModel(torch.nn.Module):
     def __init__(self, input_size = 128, output_size=1):
         super().__init__()
         self.l1 = nn.Linear(input_size, output_size)

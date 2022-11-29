@@ -24,23 +24,6 @@ def ids2path(loc_id, seq_num, dataset_dir="unibap_dataset"):
     return location_files[seq_num]
 
 def demo_tile_indices(n_tiles = 225):
-    # loc_id = 527
-    # seq_num = 5
-    # ids =    [0,1,2,3,4]
-    # labels = [1,1,1,0,0]
-    #
-    # ids = "all"
-    # labels = "allclouds" # 1 cloud, 0 no-cloud
-    #
-    # if ids == "all":
-    #     ids = [i for i in range(n_tiles)]
-    #     labels = [1 for i in range(n_tiles)]
-    # # all or a list ...
-    #
-    # item = [loc_id, seq_num, ids, labels]
-
-    all_tiles = [i for i in range(n_tiles)]
-
     def tiles_without_k_lines(k, line_n = 15):
         return [i for i in range(k*line_n,n_tiles)]
 

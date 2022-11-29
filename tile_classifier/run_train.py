@@ -1,4 +1,9 @@
 from dataset import generate_dataset
+import pylab as plt
+import torch
+from model_pytorch import LilModel, LilDataset, get_n_params
+from torch.utils.data import DataLoader
+
 ### DATASET:
 X_latents, X_tiles, Y = generate_dataset()
 print("Dataset:")
@@ -9,18 +14,12 @@ print("Y labels:", Y.shape)
 
 ### MODEL and training:
 
-import torch
-from model_pytorch import LilModel, LilDataset, get_n_params
-from torch.utils.data import DataLoader
-# import pytorch_lightning as pl
-
 X_latents = torch.from_numpy(X_latents).float()
 Y = torch.from_numpy(Y).float().unsqueeze(1)
 print("X latents:", X_latents.shape, X_latents.dtype)
 print("Y labels:", Y.shape, Y.dtype)
 
 train_loader = DataLoader(LilDataset(X_latents,Y), batch_size=8)
-# trainer = pl.Trainer(max_epochs=1)
 model = LilModel()
 print(model)
 print(get_n_params(model))
@@ -60,7 +59,6 @@ print("Losses:", training_losses)
 
 torch.save(model.state_dict(), "tile_model.pt")
 
-import pylab as plt
 plt.plot(training_losses)
 plt.show()
 

@@ -1,12 +1,5 @@
-import glob
-import numpy as np
 import rasterio
-import os
 import numpy as np
-import pandas as pd
-import math
-import numpy as np
-import torch
 
 ONCE_PRINT = False
 def file_to_tiles_data(filename, settings_bands = [0,1,2,3], tile_px_size=32, tile_overlap_px=0,

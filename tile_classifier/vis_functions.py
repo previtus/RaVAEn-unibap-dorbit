@@ -1,10 +1,6 @@
 import rasterio
 import rasterio.plot as rstplt
 import matplotlib.pyplot as plt
-import numpy as np
-import rasterio
-from tqdm import tqdm
-import os
 import math
 
 colours = {

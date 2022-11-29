@@ -1,15 +1,10 @@
 import sys
 sys.path.append('../ravaen_payload')
 
-import math
-import time
-import numpy as np
-from data_functions import DataNormalizerLogManual_ExtraStep, DataNormalizerLogManual, load_data_array_with_dataloaders, load_data_array_simple, available_files
+from data_functions import DataNormalizerLogManual_ExtraStep
 from model_functions import Module, DeeperVAE
 from util_functions import which_device, seed_all_torch_numpy_random
-from save_functions import save_latents, save_change, plot_change
-from anomaly_functions import encode_tile, twin_vae_change_score_from_latents
-from argparse import Namespace
+from anomaly_functions import encode_tile
 import torch
 
 BANDS = [0,1,2,3] # Unibap format

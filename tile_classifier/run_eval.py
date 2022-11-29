@@ -1,13 +1,9 @@
-import glob, os
-import numpy as np
 from vis_functions import *
 from standalone_encoder import *
 from dataset import available_files
 
-from model_pytorch import LilModel, LilDataset
-from torch.utils.data import DataLoader
+from model_pytorch import LilModel
 from dataset import tiles2latents
-from vis_functions import vis_image_with_tile_labels
 
 if __name__ == "__main__":
     dataset_dir = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/data/dataset of s2/unibap_dataset"
