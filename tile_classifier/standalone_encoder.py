@@ -63,24 +63,30 @@ def prep():
     module.model.eval()
     model = module.model
     # device = which_device(model)
-    return model
+
+    normalizer = DataNormalizerLogManual_ExtraStep(None)
+    normalizer.setup(None)
+
+    return model, normalizer
 
 model_global = None
+normalizer_global = None
 
 def get_model():
-    global model_global
+    global model_global, normalizer_global
     if model_global is None:
-        model_global = prep()
-        return model_global
+        model_global, normalizer_global = prep()
+        return model_global, normalizer_global
     else:
-        return model_global
+        return model_global, normalizer_global
 
 def encode(tile_data):
     latent = None
 
-    model = get_model()
+    model, normalizer = get_model()
 
-    tile_data = torch.from_numpy(tile_data).float()
+    tile_data_norm = normalizer.normalize_x(tile_data)
+    tile_data = torch.from_numpy(tile_data_norm).float()
 
     latent_mu, latent_log_var = encode_tile(model, tile_data, keep_latent_log_var=False)
     latent = latent_mu.detach().cpu().numpy()

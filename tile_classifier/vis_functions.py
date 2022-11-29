@@ -66,6 +66,32 @@ def tile_location(tile_id, tile_size=32, grid_shape=[15,15]):
                 return w_idx * tile_size + offset_into_center, h_idx * tile_size + offset_into_center
             index += 1
 
+def vis_image_with_predicted_labels(image_path, predictions, binary=True):
+    img = load_as_image(image_path)
+    img, grid_shape = to_tile_able(img)
+    plot = show_img(img, show=False)
+
+    n_tiles = int(grid_shape[0]*grid_shape[1])
+
+    dot_xs = []
+    dot_ys = []
+    cols = []
+    for tile_i in range(n_tiles):
+        # mark with something at the tile locations ...
+        dot_x, dot_y = tile_location(tile_i)
+        y_value = predictions[tile_i]
+
+        if binary:
+            colour = "blue"
+            if y_value > 0.5: colour = "red"
+
+        dot_xs.append(dot_x)
+        dot_ys.append(dot_y)
+        cols.append(colour)
+
+    plot.scatter(dot_xs, dot_ys, color=cols)
+    plt.show()
+
 def vis_image_with_tile_labels(image_path, ids, labels, debug=False):
     # check!
     if debug: dataloader_tiles = file_to_tiles_data(image_path)
@@ -98,7 +124,6 @@ def vis_image_with_tile_labels(image_path, ids, labels, debug=False):
 
 def select_tiles_from_image(image_path, ids):
     dataloader_tiles = file_to_tiles_data(image_path)
-    grid_i = math.sqrt(len(dataloader_tiles))
 
     tiles = []
     for i, tile_id in enumerate(ids):

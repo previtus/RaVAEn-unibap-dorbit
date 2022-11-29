@@ -93,14 +93,14 @@ def tiles2latents(tiles):
     print("encoded as", latents.shape)
     return latents
 
-
-def generate_dataset():
+def generate_dataset(vis_dataset=False):
     # Get tile indices
     # each image has 255 tiles, one index should be [ "img path", ids ]
     tile_indices = demo_tile_indices()
 
     dataset_dir = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/data/dataset of s2/unibap_dataset"
-    # visualize_tiles_with_annotations(tile_indices, dataset_dir)
+
+    if vis_dataset: visualize_tiles_with_annotations(tile_indices, dataset_dir)
 
     # # Get a dataset
     X_tiles, Y = get_dataset_tiles(tile_indices, dataset_dir)
@@ -115,4 +115,4 @@ if __name__ == "__main__":
     print("Dataset:")
     print("X latents:", X_latents.shape)
     print("X tiles:", X_tiles.shape)
-    print("Y labels:", X_latents.shape)
+    print("Y labels:", Y.shape)

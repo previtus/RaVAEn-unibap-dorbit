@@ -10,7 +10,7 @@ import torch
 
 ONCE_PRINT = False
 def file_to_tiles_data(filename, settings_bands = [0,1,2,3], tile_px_size=32, tile_overlap_px=0,
-                       include_last_row_colum_extra_tile=True, nan_to_num=True):
+                       include_last_row_colum_extra_tile=False, nan_to_num=True):
     """
     Opens one tif file and extracts all tiles (given tile size and overlap).
     Returns list of the data directly.
