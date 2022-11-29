@@ -66,23 +66,23 @@ def tile_location(tile_id, tile_size=32, grid_shape=[15,15]):
                 return w_idx * tile_size + offset_into_center, h_idx * tile_size + offset_into_center
             index += 1
 
-def vis_image_with_tile_labels(image_path, ids, labels):
+def vis_image_with_tile_labels(image_path, ids, labels, debug=False):
     # check!
-    dataloader_tiles = file_to_tiles_data(image_path)
+    if debug: dataloader_tiles = file_to_tiles_data(image_path)
 
     img = load_as_image(image_path)
     img, grid_shape = to_tile_able(img)
-    plt = show_img(img, show=False)
+    plot = show_img(img, show=False)
     print("got ids, labels=", ids, labels)
 
     dot_xs = []
     dot_ys = []
     cols = []
-    debug_tiles = []
+    if debug: debug_tiles = []
     for i, tile_id in enumerate(ids):
-        dataloader_tile = dataloader_tiles[tile_id][0:3].astype(float)
-        print(tile_id, "is", dataloader_tile.shape)
-        debug_tiles.append(dataloader_tile)
+        if debug: dataloader_tile = dataloader_tiles[tile_id][0:3].astype(float)
+        # print(tile_id, "is", dataloader_tile.shape)
+        if debug: debug_tiles.append(dataloader_tile)
 
         # mark with something at the tile locations ...
         dot_x, dot_y = tile_location(tile_id)
@@ -90,9 +90,20 @@ def vis_image_with_tile_labels(image_path, ids, labels):
         dot_ys.append(dot_y)
         cols.append(colours[labels[i]])
 
-    plt.scatter(dot_xs, dot_ys, color=cols)
-    # plt.show()
-    plt.draw()
+    plot.scatter(dot_xs, dot_ys, color=cols)
+    plt.show()
+    # plot.draw()
 
+    if debug: show_imgs(debug_tiles)
 
-    show_imgs(debug_tiles)
+def select_tiles_from_image(image_path, ids):
+    dataloader_tiles = file_to_tiles_data(image_path)
+    grid_i = math.sqrt(len(dataloader_tiles))
+
+    tiles = []
+    for i, tile_id in enumerate(ids):
+        dataloader_tile = dataloader_tiles[tile_id].astype(float)
+        # print(tile_id, "is", dataloader_tile.shape)
+        tiles.append(dataloader_tile)
+
+    return tiles
