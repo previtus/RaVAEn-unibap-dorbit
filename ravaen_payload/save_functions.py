@@ -21,19 +21,6 @@ def save_change(change_distances, previous_file, file_i):
     path = "../results/pair_" + str(previous_file).zfill(3) + "-" + str(file_i).zfill(3) + "_changemap.npy"
     np.save(path, change_map_image)
 
-def plot_change(change_distances, previous_file, file_i):
-    grid_size = int(math.sqrt(len(change_distances)))  # all were square
-    grid_shape = (grid_size, grid_size)
-    change_map_image = tiles2image(change_distances, grid_shape=grid_shape, overlap=0, tile_size=32)
-
-    import pylab as plt
-    plt.imshow(change_map_image[0])
-    plt.colorbar()
-    plt.tight_layout()
-    plt.savefig("../results/pair_" + str(previous_file).zfill(3) + "-" + str(file_i).zfill(3) + "_result.png")
-    plt.close()
-
-
 def tiles2image(predicted_distances, grid_shape, overlap=0, tile_size = 32, channels = 1):
     # predicted_distances shape of ~ N
     image = np.zeros((channels, grid_shape[1]*tile_size, grid_shape[0]*tile_size), dtype=np.float32)

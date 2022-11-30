@@ -1,39 +1,35 @@
-import math
 import time
 import numpy as np
-from data_functions import DataNormalizerLogManual_ExtraStep, DataNormalizerLogManual, load_data_array_with_dataloaders, load_data_array_simple, available_files
+from data_functions import DataNormalizerLogManual_ExtraStep, load_datamodule, available_files
 from model_functions import Module, DeeperVAE
 from util_functions import which_device, seed_all_torch_numpy_random
-from save_functions import save_latents, save_change, plot_change
-from anomaly_functions import encode_tile, twin_vae_change_score_from_latents
-from argparse import Namespace
+from save_functions import save_latents, save_change
+from vis_functions import plot_tripple, plot_change
+from anomaly_functions import encode_batch, twin_vae_change_score_from_latents
 import torch
 
+# CONFIG:
+BATCH_SIZE = 8
+NUM_WORKERS = 4
+in_memory = True  # True = Fast, False = Mem efficient, slow I/O
+keep_latent_log_var = False # only if we want to reconstruct
+# -- Keep the same: --
 BANDS = [0,1,2,3] # Unibap format
 LATENT_SIZE = 128
-keep_latent_log_var = False
-# if we want to reconstruct the results, then we need them... but for just distances we don't care
-plot = False # if set to True, needs matplotlib
+plot = True # if set to True, needs matplotlib
 if plot: import matplotlib as plt
 
 settings_dataloader = {'dataloader': {
-                'batch_size': 8,
-                'num_workers': 4,
+                'batch_size': BATCH_SIZE,
+                'num_workers': NUM_WORKERS,
             },
             'dataset': {
-                'data_base_path': None,
-                'bands': BANDS,
-                'tile_px_size': 32,
-                'tile_overlap_px': 0,
-                'include_last_row_colum_extra_tile': False,
-                'nan_to_num': False,
+                'bands': BANDS, 'data_base_path': None,
+                'tile_px_size': 32, 'tile_overlap_px': 0, 'include_last_row_colum_extra_tile': False, 'nan_to_num': False,
              },
             'normalizer': DataNormalizerLogManual_ExtraStep,
            }
-cfg_module = {"input_shape": (4, 32, 32),
-              "visualisation_channels": [0, 1, 2],
-              "len_train_ds": 1, "len_val_ds": 1,
-}
+cfg_module = {"input_shape": (4, 32, 32), "visualisation_channels": [0, 1, 2], "len_train_ds": 1, "len_val_ds": 1,}
 model_cls_args_VAE = {
         # Using Small model:
         "hidden_channels": [16, 32, 64], # number of channels after each downscale. Reversed on upscale
@@ -42,56 +38,61 @@ model_cls_args_VAE = {
         "visualisation_channels": cfg_module["visualisation_channels"],
 }
 
-
 ############################################################################
 
 
 def main(settings):
     print("settings:", settings)
 
+    logged = {}
+    for key in settings.keys():
+        logged[ "args_"+key ] = settings[key]
+
+    start_time = time.time()
     files_sequence = available_files(settings["folder"])
-    selected_idx = [int(idx) for idx in settings["selected_images"].split(",")]
+
+    if settings["selected_images"] == "all":
+        selected_idx = [i for i in range(len(files_sequence))] # all selected
+    else:
+        selected_idx = [int(idx) for idx in settings["selected_images"].split(",")]
     assert len(selected_idx) <= len(files_sequence), f"Selected more indices than how many we have images!"
     selected_files = []
     for idx in selected_idx:
         selected_files.append(files_sequence[idx])
 
     print("Will run on a sequence of:", selected_files)
+    files_query_time = time.time() - start_time
+    logged["time_files_query"] = files_query_time
 
     seed_all_torch_numpy_random(42)
 
     ### MODEL
+    start_time = time.time()
     cfg_train = {}
-    # Just Torch
     module = Module(DeeperVAE, cfg_module, cfg_train, model_cls_args_VAE)
     module.model.encoder.load_state_dict(torch.load(settings["model"]+"_encoder.pt"))
     module.model.fc_mu.load_state_dict(torch.load(settings["model"]+"_fc_mu.pt"))
     if keep_latent_log_var:
         module.model.fc_var.load_state_dict(torch.load(settings["model"]+"_fc_var.pt"))
 
-    # # TorchLightning
-    # module = Module(DeeperVAE, cfg_module, cfg_train, model_cls_args_VAE)
-    # hparams = {}
-    # namespace = Namespace(**hparams)
-    # checkpoint_path="/home/vitek/Vitek/Work/Trillium_RaVAEn_2/codes/RaVAEn-unibap-dorbit/_model resaved/model_rgbnir.ckpt"
-    # module.load_from_checkpoint(checkpoint_path=checkpoint_path, hparams=namespace,
-    #                             model_cls=DeeperVAE, train_cfg=cfg_train, model_cls_args=model_cls_args_VAE)
-
     print("Loaded model!")
     module.model.eval()
     model = module.model
     # device = which_device(model)
+    model_load_time = time.time() - start_time
+    logged["time_model_load"] = model_load_time
 
     ### DATA
-    in_memory = True  # True = Fast, False = Mem efficient, slow I/O
+
 
     latents_per_file = {}
     for file_i, file_path in enumerate(selected_files):
         # print("DEBUG file_i, file_path", file_i, file_path)
         previous_file = file_i - 1
 
-        # data_array = load_data_array_with_dataloaders(settings_dataloader, file_path, in_memory)
-        data_array = load_data_array_simple(settings_dataloader, file_path)
+        data_module = load_datamodule(settings_dataloader, file_path, in_memory)
+        tiles_n = len(data_module.train_dataset)
+        dataloader = data_module.train_dataloader()
 
         # get latents and save them
         # use them to calculate change map in comparison with the previous image in sequence
@@ -100,32 +101,42 @@ def main(settings):
         time_total = 0
         time_zero = time.time()
 
-        predicted_distances = []
-
-        tiles_n = len(data_array)
+        predicted_distances = np.zeros(tiles_n)
+        cd_calculated = False
         latents = torch.zeros((tiles_n,LATENT_SIZE))
-        latents_log_var = torch.zeros((tiles_n,LATENT_SIZE))
+        if keep_latent_log_var: latents_log_var = torch.zeros((tiles_n,LATENT_SIZE))
 
-        for tile_i, tile_data in enumerate(data_array):
+        index = 0
+        for batch in dataloader:
+
             start_time = time.time()
-            latent_mu, latent_log_var = encode_tile(model, tile_data, keep_latent_log_var)
+            mus, log_vars = encode_batch(model, batch, keep_latent_log_var)
 
-            latents[ tile_i ] = latent_mu
-            if keep_latent_log_var: latents_log_var[ tile_i ] = latent_log_var
+            # print(batch.shape, "=>", mus.shape)
+
+            batch_size = len(mus)
+            latents[index:index+batch_size] = mus
+            if keep_latent_log_var: latents_log_var[ index:index+batch_size ] = log_vars
             encode_time = time.time() - start_time
 
             if previous_file in latents_per_file:
-                previous_latent = latents_per_file[previous_file][tile_i]
+                previous_mus = latents_per_file[previous_file][index:index+batch_size]
 
-                distance = compare_func(latent_mu.unsqueeze(0), previous_latent.unsqueeze(0))
-                predicted_distances.append(distance)
+                distance = compare_func(mus, previous_mus)
+                predicted_distances[ index:index+batch_size ] = distance
                 if time_total == 0: print("Distance", distance, )
+
+                cd_calculated = True
 
             compare_time = (time.time() - start_time) - encode_time
             end_time = time.time()
             single_eval = (end_time - start_time)
-            if time_total == 0: print("Single evaluation took ", single_eval, " = encode ", encode_time, " + compare", compare_time)
+            if time_total == 0:
+                print("Single evaluation took ", single_eval, " = encode batch ", encode_time, " + compare batch", compare_time)
+                print("One item from the batch ", single_eval/batch_size, " = encode one ", encode_time/batch_size, " + compare one", compare_time/batch_size)
             time_total += single_eval
+
+            index += batch_size
 
         save_latents(latents, file_i)
         if keep_latent_log_var: save_latents(latents_log_var, file_i, log_var=True)
@@ -139,19 +150,27 @@ def main(settings):
         print("Full evaluation of file",file_i,"took", time_total)
         print("If we include data loading", time_end)
 
-        if len(predicted_distances) > 0:
+        if cd_calculated:
             predicted_distances = np.asarray(predicted_distances).flatten()
             save_change(predicted_distances, previous_file, file_i)
             # print("DEBUG predicted_distances, previous_file, file_i", predicted_distances.shape, previous_file, file_i)
-            if plot: plot_change(predicted_distances, previous_file, file_i)
+            if plot:
+                # plot_change(predicted_distances, previous_file, file_i)
+                # todo: plot with the two tiles as well for better viz?
+                plot_tripple(predicted_distances, previous_file, file_i, selected_files)
+
+    # LOG
+    print(logged)
 
 if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser('Run inference')
-    parser.add_argument('--folder', default="../unibap_dataset_small/",
+    parser.add_argument('--folder', default="/home/vitek/Vitek/Work/Trillium_RaVAEn_2/data/dataset of s2/unibap_dataset/",
                         help="Full path to local folder with Sentinel-2 files")
-    parser.add_argument('--selected_images', default="0,1,2",
+    # parser.add_argument('--folder', default="../unibap_dataset_small/",
+    #                     help="Full path to local folder with Sentinel-2 files")
+    parser.add_argument('--selected_images', default="all", #"all" / "0,1,2"
                         help="Indices to the files we want to use. Files will be processed sequentially, each pair evaluated for changes.")
     parser.add_argument('--model', default='../weights/model_rgbnir',
                         help="Path to the model weights")
