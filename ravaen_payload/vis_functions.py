@@ -2,8 +2,9 @@ import rasterio
 import math
 import numpy as np
 from save_functions import tiles2image
+import os
 
-def plot_change(change_distances, previous_file, file_i):
+def plot_change(save_dir, change_distances, previous_file, file_i):
     grid_size = int(math.sqrt(len(change_distances)))  # all were square
     grid_shape = (grid_size, grid_size)
     change_map_image = tiles2image(change_distances, grid_shape=grid_shape, overlap=0, tile_size=32)
@@ -12,10 +13,12 @@ def plot_change(change_distances, previous_file, file_i):
     plt.imshow(change_map_image[0])
     plt.colorbar()
     plt.tight_layout()
-    plt.savefig("../results/pair_" + str(previous_file).zfill(3) + "-" + str(file_i).zfill(3) + "_result.png")
+
+    path = os.path.join(save_dir, "pair_" + str(previous_file).zfill(3) + "-" + str(file_i).zfill(3) + "_result.png")
+    plt.savefig(path)
     plt.close()
 
-def plot_tripple(change_distances, previous_file, file_i, file_paths):
+def plot_tripple(save_dir, change_distances, previous_file, file_i, file_paths):
     # before / after
     before = load_as_image(file_paths[previous_file])
     after = load_as_image(file_paths[file_i])
@@ -32,7 +35,8 @@ def plot_tripple(change_distances, previous_file, file_i, file_paths):
 
     plot = show_imgs([before, after, change_map_image], show=False)
     plot.tight_layout()
-    plot.savefig("../results/pair_" + str(previous_file).zfill(3) + "-" + str(file_i).zfill(3) + "_result_tripple.png")
+    path = os.path.join(save_dir, "pair_" + str(previous_file).zfill(3) + "-" + str(file_i).zfill(3) + "_result_tripple.png")
+    plot.savefig(path)
     plot.close()
 
 def load_as_image(image_path):

@@ -1,4 +1,4 @@
-import time
+import time, os
 import numpy as np
 from data_functions import DataNormalizerLogManual_ExtraStep, load_datamodule, available_files
 from model_functions import Module, DeeperVAE
@@ -7,6 +7,7 @@ from save_functions import save_latents, save_change
 from vis_functions import plot_tripple, plot_change
 from anomaly_functions import encode_batch, twin_vae_change_score_from_latents
 import torch
+import json
 
 # CONFIG:
 BATCH_SIZE = 8
@@ -43,6 +44,7 @@ model_cls_args_VAE = {
 
 def main(settings):
     print("settings:", settings)
+
 
     logged = {}
     for key in settings.keys():
@@ -90,9 +92,13 @@ def main(settings):
         # print("DEBUG file_i, file_path", file_i, file_path)
         previous_file = file_i - 1
 
+        start_time = time.time()
         data_module = load_datamodule(settings_dataloader, file_path, in_memory)
         tiles_n = len(data_module.train_dataset)
         dataloader = data_module.train_dataloader()
+        if file_i == 0:
+            dataloader_create = time.time() - start_time
+            logged["time_dataloader_create_first_file"] = dataloader_create
 
         # get latents and save them
         # use them to calculate change map in comparison with the previous image in sequence
@@ -134,11 +140,15 @@ def main(settings):
             if time_total == 0:
                 print("Single evaluation took ", single_eval, " = encode batch ", encode_time, " + compare batch", compare_time)
                 print("One item from the batch ", single_eval/batch_size, " = encode one ", encode_time/batch_size, " + compare one", compare_time/batch_size)
+
+                logged["time_file_" + str(file_i).zfill(3) + "_first_full_batch_encode"] = encode_time
+                logged["time_file_" + str(file_i).zfill(3) + "_first_full_batch_compare"] = compare_time
+
             time_total += single_eval
 
             index += batch_size
 
-        save_latents(latents, file_i)
+        save_latents(settings["results_dir"], latents, file_i)
         if keep_latent_log_var: save_latents(latents_log_var, file_i, log_var=True)
 
         latents_per_file[file_i] = latents
@@ -150,29 +160,36 @@ def main(settings):
         print("Full evaluation of file",file_i,"took", time_total)
         print("If we include data loading", time_end)
 
+        logged["time_file_"+ str(file_i).zfill(3) +"_total_encode_compare"] = time_total
+        logged["time_file_"+ str(file_i).zfill(3) +"_total_encode_compare_with_IO"] = time_end
+
         if cd_calculated:
             predicted_distances = np.asarray(predicted_distances).flatten()
-            save_change(predicted_distances, previous_file, file_i)
+            save_change(settings["results_dir"], predicted_distances, previous_file, file_i)
             # print("DEBUG predicted_distances, previous_file, file_i", predicted_distances.shape, previous_file, file_i)
             if plot:
-                # plot_change(predicted_distances, previous_file, file_i)
+                # plot_change(settings["results_dir"],predicted_distances, previous_file, file_i)
                 # todo: plot with the two tiles as well for better viz?
-                plot_tripple(predicted_distances, previous_file, file_i, selected_files)
+                plot_tripple(settings["results_dir"],predicted_distances, previous_file, file_i, selected_files)
 
     # LOG
     print(logged)
+    with open(os.path.join(settings["results_dir"], "logs.json"), "w") as fh:
+        json.dump(logged, fh)
 
 if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser('Run inference')
-    parser.add_argument('--folder', default="/home/vitek/Vitek/Work/Trillium_RaVAEn_2/data/dataset of s2/unibap_dataset/",
-                        help="Full path to local folder with Sentinel-2 files")
-    # parser.add_argument('--folder', default="../unibap_dataset_small/",
+    # parser.add_argument('--folder', default="/home/vitek/Vitek/Work/Trillium_RaVAEn_2/data/dataset of s2/unibap_dataset/",
     #                     help="Full path to local folder with Sentinel-2 files")
+    parser.add_argument('--folder', default="../unibap_dataset_small/",
+                        help="Full path to local folder with Sentinel-2 files")
     parser.add_argument('--selected_images', default="all", #"all" / "0,1,2"
                         help="Indices to the files we want to use. Files will be processed sequentially, each pair evaluated for changes.")
     parser.add_argument('--model', default='../weights/model_rgbnir',
+                        help="Path to the model weights")
+    parser.add_argument('--results_dir', default='../results/',
                         help="Path to the model weights")
     # parser.add_argument('--time-limit', type=int, default=300,
     #                     help="time limit for running inference [300]")
