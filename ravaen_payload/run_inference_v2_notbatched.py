@@ -14,6 +14,7 @@ LATENT_SIZE = 128
 keep_latent_log_var = False
 # if we want to reconstruct the results, then we need them... but for just distances we don't care
 plot = False # if set to True, needs matplotlib
+if plot: import matplotlib as plt
 
 settings_dataloader = {'dataloader': {
                 'batch_size': 8,
@@ -86,6 +87,7 @@ def main(settings):
 
     latents_per_file = {}
     for file_i, file_path in enumerate(selected_files):
+        # print("DEBUG file_i, file_path", file_i, file_path)
         previous_file = file_i - 1
 
         # data_array = load_data_array_with_dataloaders(settings_dataloader, file_path, in_memory)
@@ -140,13 +142,14 @@ def main(settings):
         if len(predicted_distances) > 0:
             predicted_distances = np.asarray(predicted_distances).flatten()
             save_change(predicted_distances, previous_file, file_i)
+            # print("DEBUG predicted_distances, previous_file, file_i", predicted_distances.shape, previous_file, file_i)
             if plot: plot_change(predicted_distances, previous_file, file_i)
 
 if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser('Run inference')
-    parser.add_argument('--folder', default="../unibap_dataset/",
+    parser.add_argument('--folder', default="../unibap_dataset_small/",
                         help="Full path to local folder with Sentinel-2 files")
     parser.add_argument('--selected_images', default="0,1,2",
                         help="Indices to the files we want to use. Files will be processed sequentially, each pair evaluated for changes.")

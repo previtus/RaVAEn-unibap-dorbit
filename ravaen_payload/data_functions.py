@@ -397,7 +397,7 @@ class TileDataset(Dataset):
         if self.data_normalizer is not None:
             x = self.data_normalizer.normalize_x(x)
 
-        x = torch.from_numpy(x)
+        x = torch.from_numpy(x).float()
         return x
 
 class DataModule(torch.nn.Module): # torch.nn.Module # pl.LightningDataModule
@@ -468,6 +468,18 @@ class DataModule(torch.nn.Module): # torch.nn.Module # pl.LightningDataModule
         return DataLoader(self.test_dataset, batch_size=self.batch_size,
                           shuffle=False, num_workers=num_workers)
 
+
+def load_datamodule(settings_dataloader, file_path, in_memory):
+    # load data of this file
+    settings_dataloader_local = settings_dataloader.copy()
+    settings_dataloader_local["dataset"]["data_base_path"] = file_path
+
+    data_normalizer = settings_dataloader["normalizer"](settings_dataloader)
+    data_module = DataModule(settings_dataloader_local, data_normalizer, in_memory)
+    data_module.setup()
+    data_normalizer.setup(data_module)
+
+    return data_module # data_module.train_dataloader()
 
 def load_data_array_with_dataloaders(settings_dataloader, file_path, in_memory):
     # load data of this file
