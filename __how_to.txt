@@ -4,10 +4,13 @@ docker build -t ravaen_payload .
 # auto run
 docker run -it --rm -v /dev:/dev \
                 -v "/$(pwd)/weights":/weights \
-                -v "/$(pwd)/unibap_dataset":/unibap_dataset \
+                -v "/$(pwd)/unibap_dataset_small":/unibap_dataset_small \
                 -v "/$(pwd)/results":/results \
                 -m 2g ravaen_payload
 
-# add
+# add to the end of the command if you want to interact with the code inside, starting a bash
 bash
+python3.7 run_inference.py
 
+cd ../tile_classifier
+python3.7 run_train.py

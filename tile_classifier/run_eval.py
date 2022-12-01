@@ -1,15 +1,16 @@
-from vis_functions import *
-from standalone_encoder import *
-from dataset import available_files
+from vis_functions import vis_image_with_predicted_labels
+from dataset import available_files, file_to_tiles_data
 
 from model_pytorch import LilModel
 from dataset import tiles2latents
+import numpy as np
+import torch
 
 if __name__ == "__main__":
     dataset_dir = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/data/dataset of s2/unibap_dataset"
 
     model = LilModel()
-    tile_model_path = "tile_model.pt"
+    tile_model_path = "../results/tile_model.pt"
     model.load_state_dict(torch.load(tile_model_path))
     model.eval()
 
@@ -33,6 +34,15 @@ if __name__ == "__main__":
 
         Y_predictions = model(X_latents)
         print("Y predictions:", Y_predictions.shape)
+
+        count_clouds = 0.
+        count_nonclouds = 0.
+        for p in Y_predictions:
+            if p > 0.5: count_clouds+=1.
+            else: count_nonclouds+=1.
+
+        cloud_cover = count_clouds/(count_clouds+count_nonclouds)
+        print("This image has", int(100*100 * cloud_cover)/100., "% cloud cover")
 
         # print(Y_predictions[0:5])
 

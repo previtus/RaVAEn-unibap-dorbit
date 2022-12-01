@@ -2,13 +2,14 @@ import rasterio
 import rasterio.plot as rstplt
 import matplotlib.pyplot as plt
 import math
+import numpy as np
 
 colours = {
     0: "blue",
     1: "red",
 }
 
-from debug_comparable import *
+from debug_comparable import file_to_tiles_data
 
 def load_as_image(image_path):
     print(image_path)
@@ -117,14 +118,3 @@ def vis_image_with_tile_labels(image_path, ids, labels, debug=False):
     # plot.draw()
 
     if debug: show_imgs(debug_tiles)
-
-def select_tiles_from_image(image_path, ids):
-    dataloader_tiles = file_to_tiles_data(image_path)
-
-    tiles = []
-    for i, tile_id in enumerate(ids):
-        dataloader_tile = dataloader_tiles[tile_id].astype(float)
-        # print(tile_id, "is", dataloader_tile.shape)
-        tiles.append(dataloader_tile)
-
-    return tiles

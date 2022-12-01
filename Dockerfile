@@ -15,6 +15,7 @@ SHELL ["/bin/bash", "-c"]
 # RUN python3.7 -m pip install matplotlib==3.5.3
 
 COPY ./ravaen_payload ./ravaen_payload
+COPY ./tile_classifier ./tile_classifier
 
 WORKDIR /ravaen_payload
 CMD ["python3.7","run_inference.py"]

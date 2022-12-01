@@ -1,7 +1,7 @@
 import glob, os
 import numpy as np
-from vis_functions import *
-from standalone_encoder import *
+from standalone_encoder import encode
+from debug_comparable import file_to_tiles_data
 
 def available_files(root_dir="."):
     return sorted(glob.glob(os.path.join(root_dir,"*.tif")))
@@ -45,6 +45,8 @@ def demo_tile_indices(n_tiles = 225):
     return items
 
 def visualize_tiles_with_annotations(tile_indices, dataset_dir):
+    from vis_functions import vis_image_with_tile_labels
+
     for item in tile_indices:
         loc_id, seq_num, ids, labels = item
         image_path = ids2path(loc_id, seq_num, dataset_dir)
@@ -53,6 +55,16 @@ def visualize_tiles_with_annotations(tile_indices, dataset_dir):
         vis_image_with_tile_labels(image_path, ids, labels)
 
 
+def select_tiles_from_image(image_path, ids):
+    dataloader_tiles = file_to_tiles_data(image_path)
+
+    tiles = []
+    for i, tile_id in enumerate(ids):
+        dataloader_tile = dataloader_tiles[tile_id].astype(float)
+        # print(tile_id, "is", dataloader_tile.shape)
+        tiles.append(dataloader_tile)
+
+    return tiles
 def get_dataset_tiles(tile_indices, dataset_dir):
     all_tiles = []
     all_labels = []

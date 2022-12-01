@@ -17,8 +17,13 @@ keep_latent_log_var = False # only if we want to reconstruct
 # -- Keep the same: --
 BANDS = [0,1,2,3] # Unibap format
 LATENT_SIZE = 128
-plot = True # if set to True, needs matplotlib
-if plot: import matplotlib as plt
+plot = False # if set to True, needs matplotlib
+if plot:
+    try:
+        import matplotlib as plt
+    except:
+        print("Failed to import matplotlib, setting plot to False")
+        plot = False
 
 settings_dataloader = {'dataloader': {
                 'batch_size': BATCH_SIZE,
