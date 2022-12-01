@@ -10,7 +10,7 @@ import torch
 import json
 
 # CONFIG:
-BATCH_SIZE = 8
+BATCH_SIZE = None
 NUM_WORKERS = 4
 in_memory = True  # True = Fast, False = Mem efficient, slow I/O
 keep_latent_log_var = False # only if we want to reconstruct
@@ -26,7 +26,7 @@ if plot:
         plot = False
 
 settings_dataloader = {'dataloader': {
-                'batch_size': BATCH_SIZE,
+                'batch_size': None,
                 'num_workers': NUM_WORKERS,
             },
             'dataset': {
@@ -50,10 +50,12 @@ model_cls_args_VAE = {
 def main(settings):
     print("settings:", settings)
 
-
     logged = {}
     for key in settings.keys():
         logged[ "args_"+key ] = settings[key]
+
+    BATCH_SIZE = int(settings["batch_size"])
+    settings_dataloader ['dataloader']['batch_size'] = BATCH_SIZE
 
     start_time = time.time()
     files_sequence = available_files(settings["folder"])
@@ -178,7 +180,7 @@ def main(settings):
 
     # LOG
     print(logged)
-    with open(os.path.join(settings["results_dir"], "logs.json"), "w") as fh:
+    with open(os.path.join(settings["results_dir"], settings["log_name"]+"_"+str(BATCH_SIZE)+"batch.json"), "w") as fh:
         json.dump(logged, fh)
 
 if __name__ == "__main__":
@@ -195,8 +197,12 @@ if __name__ == "__main__":
                         help="Path to the model weights")
     parser.add_argument('--results_dir', default='../results/',
                         help="Path where to save the results")
+    parser.add_argument('--log_name', default='log',
+                        help="Name of the log (batch size will be appended in any case).")
     # parser.add_argument('--time-limit', type=int, default=300,
     #                     help="time limit for running inference [300]")
+    parser.add_argument('--batch_size', default=8,
+                        help="Batch size for the dataloader and inference")
 
     args = vars(parser.parse_args())
 

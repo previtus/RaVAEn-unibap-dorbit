@@ -117,7 +117,7 @@ def main(settings):
 
     # LOG
     print(logged)
-    with open(os.path.join(settings["results_dir"], "tile_classifier_logs.json"), "w") as fh:
+    with open(os.path.join(settings["results_dir"], settings["log_name"]+"_"+str(BATCH_SIZE)+"batch.json"), "w") as fh:
         json.dump(logged, fh)
 
 if __name__ == "__main__":
@@ -130,6 +130,8 @@ if __name__ == "__main__":
                         help="Where to save the model weights")
     parser.add_argument('--results_dir', default='../results/',
                         help="Path where to save the results")
+    parser.add_argument('--log_name', default='tile_classifier_log',
+                        help="Name of the log (batch size will be appended in any case).")
 
     parser.add_argument('--batch_size', default=8,
                         help="Batch size for the dataloader and training")

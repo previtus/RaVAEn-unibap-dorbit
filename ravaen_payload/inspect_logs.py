@@ -96,8 +96,9 @@ def inspect_logs(log_path = "../results/logs.json"):
                       ["Processing time with IO", "Processing time without IO", "One batch encode", "One batch compare"])
 
 if __name__ == "__main__":
-
-    inspect_logs()
+    log_path = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/results_logs/results_1strun/logs.json"
+    log_path = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/results_logs/results_2ndrun_both/logs.json"
+    inspect_logs(log_path)
 
 """
 Available times:
