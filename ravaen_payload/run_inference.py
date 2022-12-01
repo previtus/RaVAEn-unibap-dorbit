@@ -174,7 +174,6 @@ def main(settings):
             # print("DEBUG predicted_distances, previous_file, file_i", predicted_distances.shape, previous_file, file_i)
             if plot:
                 # plot_change(settings["results_dir"],predicted_distances, previous_file, file_i)
-                # todo: plot with the two tiles as well for better viz?
                 plot_tripple(settings["results_dir"],predicted_distances, previous_file, file_i, selected_files)
 
     # LOG
@@ -195,7 +194,7 @@ if __name__ == "__main__":
     parser.add_argument('--model', default='../weights/model_rgbnir',
                         help="Path to the model weights")
     parser.add_argument('--results_dir', default='../results/',
-                        help="Path to the model weights")
+                        help="Path where to save the results")
     # parser.add_argument('--time-limit', type=int, default=300,
     #                     help="time limit for running inference [300]")
 
