@@ -3,6 +3,7 @@ import math
 import numpy as np
 from save_functions import tiles2image
 import os
+from data_functions import file2uniqueid
 
 def plot_change(save_dir, change_distances, previous_file, file_i):
     grid_size = int(math.sqrt(len(change_distances)))  # all were square
@@ -33,9 +34,12 @@ def plot_tripple(save_dir, change_distances, previous_file, file_i, file_paths):
     print("after:", before.shape)
     print("change_map_image:", before.shape)
 
+    previous_file_uid = file2uniqueid(file_paths[previous_file])
+    this_file_uid = file2uniqueid(file_paths[file_i])
+
     plot = show_imgs([before, after, change_map_image], show=False)
     plot.tight_layout()
-    path = os.path.join(save_dir, "pair_" + str(previous_file).zfill(3) + "-" + str(file_i).zfill(3) + "_result_tripple.png")
+    path = os.path.join(save_dir, "pair_" + previous_file_uid + "_" + this_file_uid + "_result_tripple.png")
     plot.savefig(path)
     plot.close()
 
@@ -57,15 +61,29 @@ def to_tile_able(img, tile_size=32):
     return img, [w_times,h_times]
 
 
-def show_imgs(imgs, show=True):
+def show_imgs(imgs, show=True, last_with_colorbar=True):
     import rasterio.plot as rstplt
     import matplotlib.pyplot as plt
+    from mpl_toolkits.axes_grid1 import make_axes_locatable
 
     fig, ax = plt.subplots(1, len(imgs), figsize=(3 * 5, 5), tight_layout=True)
     for ax_i, img in enumerate(imgs):
-        img = np.clip(img / 2000., 0, 1)  # 3000
-        rstplt.show(img, ax=ax[ax_i])
-        ax[ax_i].axis("off")
+        if last_with_colorbar and ax_i == len(imgs)-1:
+            print("last with colorbar!")
+            img = np.moveaxis(img, 0, -1)
+            im = plt.imshow(img)
+            ax[ax_i].axis("off")
+
+            ax = plt.gca()
+            divider = make_axes_locatable(ax)
+            cax = divider.append_axes("right", size="5%", pad=0.05)
+            plt.colorbar(im, cax=cax)
+        else:
+            img = np.clip(img / 2000., 0, 1)  # 3000
+
+            rstplt.show(img, ax=ax[ax_i])
+            ax[ax_i].axis("off")
+
     if show: plt.show()
     return plt
 

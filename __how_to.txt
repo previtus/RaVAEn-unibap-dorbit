@@ -34,3 +34,11 @@ python3.7 run_train.py --batch_size 256
 
 
 docker run -it --rm -v /dev:/dev -m 2g ravaen_payload
+
+
+### Run on the whole dataset:
+docker run -it --rm -v /dev:/dev \
+                -v "/$(pwd)/weights":/weights \
+                -v "PATH_TO_FULL_DATASET":/unibap_dataset_small \
+                -v "/$(pwd)/results":/results \
+                -m 2g ravaen_payload

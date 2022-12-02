@@ -16,6 +16,30 @@ def available_files(root_dir="."):
 def available_result_files(root_dir="."):
     return sorted(glob.glob(os.path.join(root_dir,"*.npy")))
 
+
+def find_file_path_from_uid(all_files, id="110", time="04-19-2019"):
+    for idx, file_name in enumerate(all_files):
+        unique_name_id = file2uniqueid(file_name)
+        l = unique_name_id.split("_")
+        id_, time_ = l[1], l[3]
+        if id==id_ and time == time_:
+            # found it
+            return idx
+    print("Didn't find the corresponding file!")
+    return None
+
+def file2uniqueid(file_name = "eopatch_id_109_col_7_row_16_07-30-2019_etcetc.tif"):
+    if "/" in file_name:
+        file_name = file_name.split("/")[-1]
+
+    if not file_name.startswith("eopatch_id_"):
+        print("Warning, the file path doesnt start with the expected string eopatch_id_, things may break!")
+    file_name_split = file_name.split("_")
+    loc_id = file_name_split[2]
+    time_id = file_name_split[7]
+    unique_name_id = "id_" + loc_id + "_time_" + time_id
+    return unique_name_id
+
 def load_all_tile_indices_from_folder(settings_dataset):
     path = settings_dataset["data_base_path"]
 
