@@ -4,7 +4,7 @@ import numpy as np
 from data_functions import DataNormalizerLogManual_ExtraStep, tiles2image_DEBUG, available_result_files
 from model_functions import Module, DeeperVAE
 from util_functions import which_device, seed_all_torch_numpy_random
-from save_functions import save_latents, save_change, plot_change
+from vis_functions import plot_change
 from anomaly_functions import encode_tile, twin_vae_change_score_from_latents
 from argparse import Namespace
 import torch
@@ -49,7 +49,8 @@ model_cls_args_VAE = {
 def main(settings):
     print("settings:", settings)
 
-    result_files = available_result_files(settings["folder"])
+    result_files = available_result_files(settings["folder"], "npy")
+    result_files += available_result_files(settings["folder"], "npz")
 
     print("Will run on a sequence of:", result_files)
 
@@ -78,8 +79,7 @@ def main(settings):
             change_map_data = np.load(change_map)
             change_map_data = change_map_data.flatten()
             print(change_map_data.shape)
-
-            plot_change(change_map_data, change_i, change_i+1)
+            plot_change(".",change_map_data, change_i, change_i+1)
 
     if RECONSTRUCT:
 

@@ -13,8 +13,8 @@ ONCE_PRINT = True
 def available_files(root_dir="."):
     return sorted(glob.glob(os.path.join(root_dir,"*.tif")))
 
-def available_result_files(root_dir="."):
-    return sorted(glob.glob(os.path.join(root_dir,"*.npy")))
+def available_result_files(root_dir=".", ending="npy"):
+    return sorted(glob.glob(os.path.join(root_dir,"*."+ending)))
 
 
 def find_file_path_from_uid(all_files, id="110", time="04-19-2019"):

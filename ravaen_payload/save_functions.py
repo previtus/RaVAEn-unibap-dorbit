@@ -10,7 +10,12 @@ def save_latents(save_dir, latents, uid_name, log_var=False):
     if log_var:
         add = "_logvar"
     path = os.path.join(save_dir, "latent_"+uid_name+add+".npy")
-    np.save(path, latents)
+
+    try:
+        np.savez_compressed(path.replace(".npy", ".npz"), latents=latents)
+    except:
+        np.save(path, latents)
+
 
 def save_change(save_dir, change_distances, previous_uid_name, uid_name):
     grid_size = int(math.sqrt(len(change_distances)))  # all were square
