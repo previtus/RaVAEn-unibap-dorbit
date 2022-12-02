@@ -63,6 +63,10 @@ def get_unibap_dataset_data(settings):
         from good_pairs import good_pairs_37
         files_sequence = get_interesting_pairs(files_sequence, good_pairs_37)
         print("Filtered down to", len(files_sequence), "items in the sequence.")
+    elif settings["unibap_dataset_filter"] == "pairs15":
+        from good_pairs import good_pairs_15
+        files_sequence = get_interesting_pairs(files_sequence, good_pairs_15)
+        print("Filtered down to", len(files_sequence), "items in the sequence.")
 
     if settings["selected_images"] == "all":
         selected_idx = [i for i in range(len(files_sequence))] # all selected
