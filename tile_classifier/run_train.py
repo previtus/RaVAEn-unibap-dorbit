@@ -16,6 +16,8 @@ if plot:
         plot = False
 
 def main(settings):
+    main_start_time = time.time()
+
     logged = {}
     for key in settings.keys():
         logged["args_" + key] = settings[key]
@@ -125,6 +127,13 @@ def main(settings):
         plt.show()
 
     # LOG
+    main_end_time = time.time()
+    main_run_time = (main_end_time - main_start_time)
+    print("TOTAL RUN TIME = " + str(main_run_time) + "s (" + str(main_run_time / 60.0) + "min)")
+
+    logged["time_main"] = main_run_time
+
+
     print(logged)
     with open(os.path.join(settings["results_dir"], settings["log_name"]+"_"+str(BATCH_SIZE)+"batch.json"), "w") as fh:
         json.dump(logged, fh)

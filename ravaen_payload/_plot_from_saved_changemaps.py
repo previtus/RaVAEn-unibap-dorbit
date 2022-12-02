@@ -6,7 +6,8 @@ def load_changemap(changemap_path):
     change_map_image = np.load(changemap_path)
     return change_map_image
 
-RESULTS_DIR = "../results"
+# RESULTS_DIR = "../results"
+RESULTS_DIR = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/logs_unibap/results05_newnames_allversions/"
 path = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/data/dataset of s2/unibap_dataset"
 all_files = available_files(root_dir=path)
 

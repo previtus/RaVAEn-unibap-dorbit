@@ -50,6 +50,8 @@ model_cls_args_VAE = {
 
 
 def main(settings):
+    main_start_time = time.time()
+
     print("settings:", settings)
 
     logged = {}
@@ -191,6 +193,12 @@ def main(settings):
         logged["time_file_"+ str(file_i).zfill(3) +"_save_latents_changemap"] = time_after_saved
 
     # LOG
+    main_end_time = time.time()
+    main_run_time = (main_end_time - main_start_time)
+    print("TOTAL RUN TIME = " + str(main_run_time) + "s (" + str(main_run_time / 60.0) + "min)")
+
+    logged["time_main"] = main_run_time
+
     print(logged)
     with open(os.path.join(settings["results_dir"], settings["log_name"]+"_"+str(BATCH_SIZE)+"batch.json"), "w") as fh:
         json.dump(logged, fh)
@@ -227,9 +235,4 @@ if __name__ == "__main__":
 
     args = vars(parser.parse_args())
 
-    start_time = time.time()
     main(settings=args)
-    end_time = time.time()
-
-    time = (end_time - start_time)
-    print("TOTAL RUN TIME = " + str(time) + "s (" + str(time / 60.0) + "min)")

@@ -206,17 +206,20 @@ def plot_times_multiple_runs(log_paths, run_names):
 
 if __name__ == "__main__":
     # A
-    log_path = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/logs_unibap/results03_withbatchsizes/log_64batch.json"
+    #log_path = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/logs_unibap/results03_withbatchsizes/log_64batch.json"
     ignore_file_i_above = None
-    log_path = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/logs_unibap/results04_cdwholedataset/log_128batch.json"
-    ignore_file_i_above = 30 # can't even render beyond 100
-    # plot_all_files(log_path, ignore_file_i_above=ignore_file_i_above)
+    #log_path = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/logs_unibap/results04_cdwholedataset/log_128batch.json"
+    log_path = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/logs_unibap/results05_newnames_allversions/log_64batch.json"
+    #ignore_file_i_above = 30 # can't even render beyond 100
+    plot_all_files(log_path, ignore_file_i_above=ignore_file_i_above)
 
     # B
-    logs_folder = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/logs_unibap/results03_withbatchsizes/" # 3 files, variety of batchsizes
-    batchsizes = [2,4,8,16,32,64,128]
-    logs_folder = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/logs_unibap/results04_cdwholedataset/" # all 1024 files!, fewer batchsizes
-    batchsizes = [16, 32, 64, 128]
+    # logs_folder = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/logs_unibap/results03_withbatchsizes/" # 3 files, variety of batchsizes
+    # batchsizes = [2,4,8,16,32,64,128]
+    # logs_folder = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/logs_unibap/results04_cdwholedataset/" # all 1024 files!, fewer batchsizes
+    # batchsizes = [16, 32, 64, 128]
+    logs_folder = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/logs_unibap/results05_newnames_allversions/"
+    batchsizes = [2, 4, 8, 16, 32, 64, 128]
     logs = [ logs_folder+"log_"+str(i)+"batch.json" for i in batchsizes]
     names = [ "Batch Size "+str(i) for i in batchsizes]
     plot_times_multiple_runs(logs, names)
@@ -237,5 +240,7 @@ time_file_002_first_full_batch_compare
 time_file_002_total_encode_compare
 time_file_002_total_encode_compare_with_IO
 
+v2 shoudl also have
+time_file_???_dataloader_create
 
 """
