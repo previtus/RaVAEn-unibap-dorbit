@@ -42,3 +42,10 @@ docker run -it --rm -v /dev:/dev \
                 -v "PATH_TO_FULL_DATASET":/unibap_dataset_small \
                 -v "/$(pwd)/results":/results \
                 -m 2g ravaen_payload
+
+
+### On small subset:
+
+python3.7 ravaen_payload/run_inference.py --batch_size 64 --selected_images first_30 --unibap_dataset_filter none
+
+python3.7 ravaen_payload/run_inference.py --batch_size 64 --selected_images first_30 --unibap_dataset_filter none --special_save_logvars True

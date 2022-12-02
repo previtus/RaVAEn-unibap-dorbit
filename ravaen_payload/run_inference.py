@@ -10,10 +10,10 @@ import torch
 import json
 
 # CONFIG:
-BATCH_SIZE = None
-NUM_WORKERS = None
-in_memory = True  # True = Fast, False = Mem efficient, slow I/O
-keep_latent_log_var = False # only if we want to reconstruct
+# BATCH_SIZE = None
+# NUM_WORKERS = None
+# in_memory = None  # True = Fast, False = Mem efficient, slow I/O
+# keep_latent_log_var = None # only if we want to reconstruct
 # -- Keep the same: --
 BANDS = [0,1,2,3] # Unibap format
 LATENT_SIZE = 128
@@ -63,6 +63,8 @@ def main(settings):
     NUM_WORKERS = int(settings["num_workers"])
     settings_dataloader ['dataloader']['num_workers'] = NUM_WORKERS
     SEED = int(settings["seed"])
+
+    keep_latent_log_var = settings["special_save_logvars"]
 
     in_memory = not settings["special_keep_only_indices_in_mem"]
     if not in_memory: print("Careful, data is loaded with each batch, IO will be slower! (Change special_keep_only_indices_in_mem to default False if you don't want that!)")
@@ -176,7 +178,7 @@ def main(settings):
 
         time_before_saves = time.time()
         save_latents(settings["results_dir"], latents, uid_name=this_file_uid)
-        if keep_latent_log_var: save_latents(latents_log_var, file_i, log_var=True)
+        if keep_latent_log_var: save_latents(settings["results_dir"], latents_log_var, uid_name=this_file_uid, log_var=True)
 
         latents_per_file[file_i] = latents
 
@@ -235,6 +237,8 @@ if __name__ == "__main__":
     # Keep False, unless memory explodes ...
     parser.add_argument('--special_keep_only_indices_in_mem', default=False,
                         help="Dataloader doesn't load the tiles unless asked, this will support even huge S2 scenes, but is slow.")
+    parser.add_argument('--special_save_logvars', default=False,
+                        help="Save log var outputs.")
 
     args = vars(parser.parse_args())
 

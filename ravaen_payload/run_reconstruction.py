@@ -13,8 +13,8 @@ BANDS = [0,1,2,3] # Unibap format
 LATENT_SIZE = 128
 keep_latent_log_var = True # if we want to reconstruct the results, then we need them... then keep to True
 
-RECONSTRUCT = False
-PLOT_CHANGE_MAPS = True
+RECONSTRUCT = True
+PLOT_CHANGE_MAPS = False
 
 settings_dataloader = {'dataloader': {
                 'batch_size': 8,
@@ -89,7 +89,11 @@ def main(settings):
         print(latent_logvar)
 
         for latent_i in range(len(latent_mus)):
-            mus, logvars = np.load(latent_mus[latent_i]), np.load(latent_logvar[latent_i])
+            if ".npy" in latent_mus[latent_i]:
+                mus, logvars = np.load(latent_mus[latent_i]), np.load(latent_logvar[latent_i])
+            elif ".npz" in latent_mus[latent_i]:
+                mus = np.load(latent_mus[latent_i])['latents']
+                logvars = np.load(latent_logvar[latent_i])['latents']
 
             reconstructions = []
             for tile_i in range(len(mus)):
