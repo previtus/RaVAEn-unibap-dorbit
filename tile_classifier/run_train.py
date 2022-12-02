@@ -23,10 +23,13 @@ def main(settings):
     dataset_load_path = settings["dataset_as_np"]
     trained_model_save_path = settings["trained_model_path"]
     BATCH_SIZE = int(settings["batch_size"])
+    EPOCHS = int(settings["train_epochs"])
+
+
     print("Will load data from", dataset_load_path, ", train and save the model to, ",trained_model_save_path)
 
     ### DATASET:
-    start_time = time.time()
+    time_before_dataset = time.time()
     try:
         X_latents, _, Y = generate_dataset()
     except:
@@ -38,35 +41,39 @@ def main(settings):
     print("X latents:", X_latents.shape)
     # print("X tiles:", X_tiles.shape)
     print("Y labels:", Y.shape)
-    dataset_load_time = time.time() - start_time
+    dataset_load_time = time.time() - time_before_dataset
     logged["time_dataset_load"] = dataset_load_time
 
     ### MODEL and training:
-    start_time = time.time()
+    time_before_dataloader = time.time()
     X_latents = torch.from_numpy(X_latents).float()
     Y = torch.from_numpy(Y).float().unsqueeze(1)
     print("X latents:", X_latents.shape, X_latents.dtype)
     print("Y labels:", Y.shape, Y.dtype)
 
     train_loader = DataLoader(LilDataset(X_latents,Y), batch_size=BATCH_SIZE)
+
+    time_now = time.time()
+    dataloader_load_time = time_now - time_before_dataloader
+    logged["time_dataloader_load"] = dataloader_load_time
+    time_before_model = time_now
+
     model = LilModel()
     print(model)
     print(get_n_params(model))
 
-
     criterion = model.criterion
     optimizer = model.configure_optimizers()
-    model_create_time = time.time() - start_time
+    model_create_time = time.time() - time_before_model
     logged["time_model_create"] = model_create_time
 
     example_inputs = None
 
-    EPOCHS = 10
     N_samples = len(Y)
     PRINT_EVERY = int(N_samples/2)
     training_losses = []
     for epoch in range(EPOCHS):  # loop over the dataset multiple times
-        start_time = time.time()
+        time_start_of_epoch = time.time()
 
         running_loss = 0.0
         for i, data in enumerate(train_loader, 0):
@@ -90,10 +97,12 @@ def main(settings):
             if i % PRINT_EVERY == PRINT_EVERY-1:    # print every 2000 mini-batches
                 print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / PRINT_EVERY:.3f}')
                 running_loss = 0.0
-        training_losses.append(running_loss / N_samples)
+        loss_this_epoch = running_loss / N_samples
+        training_losses.append(loss_this_epoch)
 
-        one_epoch_time = time.time() - start_time
+        one_epoch_time = time.time() - time_start_of_epoch
         logged["time_epoch_" + str(epoch).zfill(3) + "_full"] = one_epoch_time
+        logged["loss_epoch_" + str(epoch).zfill(3) + "_loss"] = loss_this_epoch
 
     print('Finished Training')
     print("Losses:", training_losses)
@@ -135,6 +144,10 @@ if __name__ == "__main__":
 
     parser.add_argument('--batch_size', default=8,
                         help="Batch size for the dataloader and training")
+
+
+    parser.add_argument('--train_epochs', default=10,
+                        help="How many epochs to train for")
 
     # parser.add_argument('--time-limit', type=int, default=300,
     #                     help="time limit for running inference [300]")
