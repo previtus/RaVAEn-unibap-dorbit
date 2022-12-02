@@ -1,10 +1,10 @@
 import time, os
 import numpy as np
-from data_functions import DataNormalizerLogManual_ExtraStep, load_datamodule, available_files, file2uniqueid
+from data_functions import DataNormalizerLogManual_ExtraStep, load_datamodule, file2uniqueid
+from unibap_dataset_query import get_unibap_dataset_data
 from model_functions import Module, DeeperVAE
 from util_functions import which_device, seed_all_torch_numpy_random
 from save_functions import save_latents, save_change
-from vis_functions import plot_tripple, plot_change
 from anomaly_functions import encode_batch, twin_vae_change_score_from_latents
 import torch
 import json
@@ -21,6 +21,8 @@ plot = False # if set to True, needs matplotlib
 if plot:
     try:
         import matplotlib as plt
+        from vis_functions import plot_tripple, plot_change
+
     except:
         print("Failed to import matplotlib, setting plot to False")
         plot = False
@@ -63,39 +65,16 @@ def main(settings):
     in_memory = not settings["special_keep_only_indices_in_mem"]
     if not in_memory: print("Careful, data is loaded with each batch, IO will be slower! (Change special_keep_only_indices_in_mem to default False if you don't want that!)")
 
-    start_time = time.time()
-    files_sequence = available_files(settings["folder"])
-
-    if settings["selected_images"] == "all":
-        selected_idx = [i for i in range(len(files_sequence))] # all selected
-    elif settings["selected_images"] == "tenpercent":
-        # select just 10 percent of the images - from 1024 into just 102
-        # still good enough sample... but faster
-        ten_percent = int(len(files_sequence) / 10.)
-        selected_idx = [i for i in range(ten_percent)]  # sample
-    elif settings["selected_images"].startswith("first_"):
-        first_n = settings["selected_images"].split("first_")[-1]
-        try:
-            first_n = int(first_n)
-        except:
-            print("failed with parsing how many first images, reverting to just 10")
-            first_n = 10
-        selected_idx = [i for i in range(first_n)]
-    else:
-        selected_idx = [int(idx) for idx in settings["selected_images"].split(",")]
-    assert len(selected_idx) <= len(files_sequence), f"Selected more indices than how many we have images!"
-    selected_files = []
-    for idx in selected_idx:
-        selected_files.append(files_sequence[idx])
-
+    time_before_file_query = time.time()
+    selected_files = get_unibap_dataset_data(settings)
     print("Will run on a sequence of:", selected_files)
-    files_query_time = time.time() - start_time
+    files_query_time = time.time() - time_before_file_query
     logged["time_files_query"] = files_query_time
 
     seed_all_torch_numpy_random(SEED)
 
     ### MODEL
-    start_time = time.time()
+    time_before_model_load = time.time()
     cfg_train = {}
     module = Module(DeeperVAE, cfg_module, cfg_train, model_cls_args_VAE)
     module.model.encoder.load_state_dict(torch.load(settings["model"]+"_encoder.pt"))
@@ -107,7 +86,7 @@ def main(settings):
     module.model.eval()
     model = module.model
     # device = which_device(model)
-    model_load_time = time.time() - start_time
+    model_load_time = time.time() - time_before_model_load
     logged["time_model_load"] = model_load_time
 
     ### DATA
@@ -125,13 +104,12 @@ def main(settings):
             previous_file_uid = "FirstFile"
         print("CD",file_i,"/",len(selected_files),":",previous_file_uid,"<>",this_file_uid)
 
-        start_time = time.time()
+        time_before_dataloader = time.time()
         data_module = load_datamodule(settings_dataloader, file_path, in_memory)
         tiles_n = len(data_module.train_dataset)
         dataloader = data_module.train_dataloader()
-        if file_i == 0:
-            dataloader_create = time.time() - start_time
-            logged["time_dataloader_create_first_file"] = dataloader_create
+        dataloader_create = time.time() - time_before_dataloader
+        logged["time_file_" + str(file_i).zfill(3) + "_dataloader_create"] = dataloader_create
 
         # get latents and save them
         # use them to calculate change map in comparison with the previous image in sequence
@@ -148,7 +126,7 @@ def main(settings):
         index = 0
         for batch in dataloader:
 
-            start_time = time.time()
+            time_before_encode = time.time()
             mus, log_vars = encode_batch(model, batch, keep_latent_log_var)
 
             # print(batch.shape, "=>", mus.shape)
@@ -156,7 +134,9 @@ def main(settings):
             batch_size = len(mus)
             latents[index:index+batch_size] = mus
             if keep_latent_log_var: latents_log_var[ index:index+batch_size ] = log_vars
-            encode_time = time.time() - start_time
+
+            encode_time = time.time() - time_before_encode
+            time_before_compare = time.time()
 
             if previous_file in latents_per_file:
                 previous_mus = latents_per_file[previous_file][index:index+batch_size]
@@ -167,34 +147,38 @@ def main(settings):
 
                 cd_calculated = True
 
-            compare_time = (time.time() - start_time) - encode_time
-            end_time = time.time()
-            single_eval = (end_time - start_time)
+            time_now = time.time()
+            compare_time = time_now - time_before_compare
+            time_to_encode_compare = time_now - time_before_encode
+
             if time_total == 0:
-                print("Single evaluation took ", single_eval, " = encode batch ", encode_time, " + compare batch", compare_time)
-                print("One item from the batch ", single_eval/batch_size, " = encode one ", encode_time/batch_size, " + compare one", compare_time/batch_size)
+                print("Single evaluation of batch size ",batch_size,"took ", time_to_encode_compare, " = encode batch ", encode_time, " + compare batch", compare_time)
+                #print("One item from the batch ", time_to_encode_compare/batch_size, " = encode one ", encode_time/batch_size, " + compare one", compare_time/batch_size)
 
                 logged["time_file_" + str(file_i).zfill(3) + "_first_full_batch_encode"] = encode_time
                 logged["time_file_" + str(file_i).zfill(3) + "_first_full_batch_compare"] = compare_time
+                logged["time_file_" + str(file_i).zfill(3) + "_first_full_batch_encode_and_compare"] = time_to_encode_compare # for sanity check mostly
 
-            time_total += single_eval
+            time_total += time_to_encode_compare
 
             index += batch_size
 
+        time_whole_file = time.time() - time_zero
+
+        print("Sum of all encodings and comparisons for",file_i,"took:", time_total)
+        print("If we include data loading", time_whole_file)
+
+        logged["time_file_"+ str(file_i).zfill(3) +"_total_encode_compare"] = time_total
+        logged["time_file_"+ str(file_i).zfill(3) +"_total_encode_compare_with_IO"] = time_whole_file
+
+
+        time_before_saves = time.time()
         save_latents(settings["results_dir"], latents, uid_name=this_file_uid)
         if keep_latent_log_var: save_latents(latents_log_var, file_i, log_var=True)
 
         latents_per_file[file_i] = latents
 
         if previous_file in latents_per_file: del latents_per_file[previous_file] # longer history no longer needed
-
-        time_end = time.time() - time_zero
-
-        print("Full evaluation of file",file_i,"took", time_total)
-        print("If we include data loading", time_end)
-
-        logged["time_file_"+ str(file_i).zfill(3) +"_total_encode_compare"] = time_total
-        logged["time_file_"+ str(file_i).zfill(3) +"_total_encode_compare_with_IO"] = time_end
 
         if cd_calculated:
             predicted_distances = np.asarray(predicted_distances).flatten()
@@ -203,6 +187,8 @@ def main(settings):
             if plot:
                 # plot_change(settings["results_dir"],predicted_distances, previous_file, file_i)
                 plot_tripple(settings["results_dir"],predicted_distances, previous_file, file_i, selected_files)
+        time_after_saved = time.time() - time_before_saves
+        logged["time_file_"+ str(file_i).zfill(3) +"_save_latents_changemap"] = time_after_saved
 
     # LOG
     print(logged)
@@ -235,7 +221,7 @@ if __name__ == "__main__":
     parser.add_argument('--seed', default=42,
                         help="Seed for torch and random calls.")
 
-
+    # Keep False, unless memory explodes ...
     parser.add_argument('--special_keep_only_indices_in_mem', default=False,
                         help="Dataloader doesn't load the tiles unless asked, this will support even huge S2 scenes, but is slow.")
 
