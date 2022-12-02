@@ -17,8 +17,11 @@ SHELL ["/bin/bash", "-c"]
 COPY ./ravaen_payload ./ravaen_payload
 COPY ./tile_classifier ./tile_classifier
 
-WORKDIR /ravaen_payload
-CMD ["python3.7","run_inference.py"]
+#WORKDIR /ravaen_payload
+#CMD ["python3.7","run_inference.py"]
+
+WORKDIR /
+CMD ["bash","run_all.sh"]
 
 # check image sizes with
 #docker image ls

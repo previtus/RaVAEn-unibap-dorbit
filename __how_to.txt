@@ -12,13 +12,13 @@ docker run -it --rm -v /dev:/dev \
 bash
 python3.7 run_inference.py
 
-python3.7 run_inference.py --batch_size 2 --selected_images first_50
-python3.7 run_inference.py --batch_size 4 --selected_images first_50
-python3.7 run_inference.py --batch_size 8 --selected_images first_50
-python3.7 run_inference.py --batch_size 16 --selected_images first_50
-python3.7 run_inference.py --batch_size 32 --selected_images first_50
-python3.7 run_inference.py --batch_size 64 --selected_images first_50
-python3.7 run_inference.py --batch_size 128 --selected_images first_50
+python3.7 run_inference.py --batch_size 2 --selected_images first_30
+python3.7 run_inference.py --batch_size 4 --selected_images first_30
+python3.7 run_inference.py --batch_size 8 --selected_images first_30
+python3.7 run_inference.py --batch_size 16 --selected_images first_30
+python3.7 run_inference.py --batch_size 32 --selected_images first_30
+python3.7 run_inference.py --batch_size 64 --selected_images first_30
+python3.7 run_inference.py --batch_size 128 --selected_images first_30
 
 cd ../tile_classifier
 python3.7 run_train.py

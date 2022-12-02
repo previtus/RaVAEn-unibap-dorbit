@@ -124,11 +124,11 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser('Run training tile classifier')
-    parser.add_argument('--dataset_as_np', default="dataset_as_np.npz",
+    parser.add_argument('--dataset_as_np', default="weights/train_dataset_as_np.npz",
                         help="Path to the prepared latents dataset.")
-    parser.add_argument('--trained_model_path', default='../results/tile_model.pt',
+    parser.add_argument('--trained_model_path', default='results/tile_model.pt',
                         help="Where to save the model weights")
-    parser.add_argument('--results_dir', default='../results/',
+    parser.add_argument('--results_dir', default='results/',
                         help="Path where to save the results")
     parser.add_argument('--log_name', default='tile_classifier_log',
                         help="Name of the log (batch size will be appended in any case).")

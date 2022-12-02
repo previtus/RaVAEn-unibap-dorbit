@@ -105,13 +105,19 @@ def plot_measurements(measurements, titles, plot_title=""):
         plt.title(plot_title)
     plt.show()
 
-def check_statistic(times, check = "total_encode_compare_with_IO"):
+def check_statistic(times, check = "total_encode_compare_with_IO", ignore_file_i_above=None):
     relevant_keys = [k for k in times.keys() if k.endswith(check)]
     relevant_keys.sort()
 
-    print(relevant_keys)
+    # print(relevant_keys)
     measurements = []
     for k in relevant_keys:
+        if ignore_file_i_above is not None:
+            # _file_000_
+            file_i = int( k.split("_file_")[-1].split("_")[0] )
+            if file_i > ignore_file_i_above:
+                continue
+
         measurement = times[k]
         measurements.append(measurement)
     measurements = np.asarray(measurements)
@@ -133,13 +139,13 @@ def load_logs(log_path = "../results/logs.json"):
     print("Measured times:",times)
     return args, times
 
-def plot_all_files(log_path = "../results/logs.json"):
+def plot_all_files(log_path = "../results/logs.json", ignore_file_i_above=None):
     args, times = load_logs(log_path)
 
-    times_with_io = check_statistic(times, "total_encode_compare_with_IO")
-    times_without_io = check_statistic(times, "total_encode_compare")
-    times_one_encode = check_statistic(times, "first_full_batch_encode")
-    times_one_compare = check_statistic(times, "first_full_batch_compare")
+    times_with_io = check_statistic(times, "total_encode_compare_with_IO", ignore_file_i_above)
+    times_without_io = check_statistic(times, "total_encode_compare", ignore_file_i_above)
+    times_one_encode = check_statistic(times, "first_full_batch_encode", ignore_file_i_above)
+    times_one_compare = check_statistic(times, "first_full_batch_compare", ignore_file_i_above)
 
     # plot_measurements([times_with_io, times_without_io], ["Processing time with IO", "Processing time without IO"])
     plot_measurements([times_with_io, times_without_io,times_one_encode,times_one_compare],
@@ -199,12 +205,20 @@ def plot_times_multiple_runs(log_paths, run_names):
 
 
 if __name__ == "__main__":
-    # log_path = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/logs_unibap/results03_withbatchsizes/log_64batch.json"
-    # plot_all_files(log_path)
+    # A
+    log_path = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/logs_unibap/results03_withbatchsizes/log_64batch.json"
+    ignore_file_i_above = None
+    log_path = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/logs_unibap/results04_cdwholedataset/log_128batch.json"
+    ignore_file_i_above = 30 # can't even render beyond 100
+    # plot_all_files(log_path, ignore_file_i_above=ignore_file_i_above)
 
-    logs_folder = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/logs_unibap/results03_withbatchsizes/"
-    logs = [ logs_folder+"log_"+str(i)+"batch.json" for i in [2,4,8,16,32,64,128]]
-    names = [ "Batch Size "+str(i) for i in [2,4,8,16,32,64,128]]
+    # B
+    logs_folder = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/logs_unibap/results03_withbatchsizes/" # 3 files, variety of batchsizes
+    batchsizes = [2,4,8,16,32,64,128]
+    logs_folder = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/logs_unibap/results04_cdwholedataset/" # all 1024 files!, fewer batchsizes
+    batchsizes = [16, 32, 64, 128]
+    logs = [ logs_folder+"log_"+str(i)+"batch.json" for i in batchsizes]
+    names = [ "Batch Size "+str(i) for i in batchsizes]
     plot_times_multiple_runs(logs, names)
 
 """

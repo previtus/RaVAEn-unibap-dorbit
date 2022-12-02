@@ -215,13 +215,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser('Run inference')
     # parser.add_argument('--folder', default="/home/vitek/Vitek/Work/Trillium_RaVAEn_2/data/dataset of s2/unibap_dataset/",
     #                     help="Full path to local folder with Sentinel-2 files")
-    parser.add_argument('--folder', default="../unibap_dataset_small/",
+    parser.add_argument('--folder', default="unibap_dataset/",
                         help="Full path to local folder with Sentinel-2 files")
     parser.add_argument('--selected_images', default="all", #"all" / "tenpercent" / "first_N" / "0,1,2"
                         help="Indices to the files we want to use. Files will be processed sequentially, each pair evaluated for changes.")
-    parser.add_argument('--model', default='../weights/model_rgbnir',
+    parser.add_argument('--model', default='weights/model_rgbnir',
                         help="Path to the model weights")
-    parser.add_argument('--results_dir', default='../results/',
+    parser.add_argument('--results_dir', default='results/',
                         help="Path where to save the results")
     parser.add_argument('--log_name', default='log',
                         help="Name of the log (batch size will be appended in any case).")
