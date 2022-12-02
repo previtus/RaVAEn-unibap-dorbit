@@ -123,7 +123,7 @@ def main(settings):
         this_file_uid = file2uniqueid(file_path)
         if file_i == 0:
             previous_file_uid = "FirstFile"
-        print("CD:",previous_file_uid,"<>",this_file_uid)
+        print("CD",file_i,"/",len(selected_files),":",previous_file_uid,"<>",this_file_uid)
 
         start_time = time.time()
         data_module = load_datamodule(settings_dataloader, file_path, in_memory)
