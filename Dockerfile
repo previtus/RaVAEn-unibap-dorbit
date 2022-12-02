@@ -16,6 +16,7 @@ SHELL ["/bin/bash", "-c"]
 
 COPY ./ravaen_payload ./ravaen_payload
 COPY ./tile_classifier ./tile_classifier
+COPY run_all.sh run_all.sh
 
 #WORKDIR /ravaen_payload
 #CMD ["python3.7","run_inference.py"]
