@@ -62,7 +62,7 @@ def inspect_logs(log_path = "../results/logs.json"):
                       ["Training time per epoch"])
 
 if __name__ == "__main__":
-    log_path = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/results_logs/results_2ndrun_both/tile_classifier_logs.json"
+    log_path = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/logs_unibap/results03_withbatchsizes/tile_classifier_log_64batch.json"
     inspect_logs(log_path)
 
 """
