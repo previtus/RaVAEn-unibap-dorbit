@@ -229,6 +229,9 @@ if __name__ == "__main__":
     parser.add_argument('--seed', default=42,
                         help="Seed for torch and random calls.")
 
+    parser.add_argument('--unibap_dataset_filter', default="pairs37",
+                        help="Filter locations (none, pairs37, pairs60 or, sequences100).")
+
     # Keep False, unless memory explodes ...
     parser.add_argument('--special_keep_only_indices_in_mem', default=False,
                         help="Dataloader doesn't load the tiles unless asked, this will support even huge S2 scenes, but is slow.")
