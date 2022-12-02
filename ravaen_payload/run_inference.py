@@ -241,5 +241,9 @@ if __name__ == "__main__":
 
     args = vars(parser.parse_args())
 
+    start_time = time.time()
     main(settings=args)
+    end_time = time.time()
 
+    time = (end_time - start_time)
+    print("TOTAL RUN TIME = " + str(time) + "s (" + str(time / 60.0) + "min)")
