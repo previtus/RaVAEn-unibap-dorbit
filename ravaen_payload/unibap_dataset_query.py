@@ -78,6 +78,10 @@ def get_unibap_dataset_data(settings):
         except:
             print("failed with parsing how many first images, reverting to just 10")
             first_n = 10
+
+        if first_n > len(files_sequence):
+            first_n = len(files_sequence)
+            print("max first_n", first_n)
         selected_idx = [i for i in range(first_n)]
     else:
         selected_idx = [int(idx) for idx in settings["selected_images"].split(",")]
