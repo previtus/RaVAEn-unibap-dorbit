@@ -3,6 +3,41 @@ import torch.nn as nn
 import torch
 from torch.utils.data import Dataset
 
+
+class LilMulticlassModel(torch.nn.Module):
+    # https://www.kaggle.com/code/schmiddey/multiclass-classification-with-pytorch
+    def __init__(self, input_size = 128, output_size=4): # hidden_layer_size
+
+        super().__init__()
+        self.l1 = nn.Linear(input_size, output_size)
+        self.criterion = nn.CrossEntropyLoss()
+
+        # hidden_layer_size = 32 # much more weights ....
+        # self.l1 = nn.Linear(input_size, hidden_layer_size)
+        # self.l2 = nn.Linear(hidden_layer_size, output_size)
+
+    def forward(self, x):
+        return self.l1(x)
+
+        x = torch.sigmoid(self.l1(x))
+        return self.l2(x)
+
+    def training_step(self, batch, batch_idx):
+        # used only in pl
+        x, y = batch
+
+        # print("train step report:", x.shape, y.shape)
+
+        y_hat = self(x)
+        # loss = F.cross_entropy(y_hat, y)
+        loss = self.criterion(y_hat, y)
+        return loss
+
+    def configure_optimizers(self):
+        #optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+        return torch.optim.Adam(self.parameters(), lr=0.02)
+
+
 class LilModel(torch.nn.Module):
     def __init__(self, input_size = 128, output_size=1):
         super().__init__()
@@ -57,3 +92,39 @@ def get_n_params(model):
             nn = nn*s
         pp += nn
     return pp
+
+
+
+
+
+
+if __name__ == "__main__":
+    print("===== 1 layer binary model")
+    model = LilModel()
+    print(model)
+    print(get_n_params(model))
+
+    example_in = torch.zeros((32,128))
+    example_out = model(example_in)
+    print(example_in.shape, "=>", example_out.shape)
+
+    print("===== 1 layer multiclass model")
+    example_in = torch.zeros((32,128))
+    model = LilMulticlassModel(output_size=4)
+    print(model)
+    print(get_n_params(model))
+
+    example_out = model(example_in)
+    example_gt = torch.zeros((32)).long()
+    print(example_in.shape, "=>", example_out.shape)
+
+    criterion = model.criterion
+    optimizer = model.configure_optimizers()
+
+    loss = criterion(example_out, example_gt)
+    loss.backward()
+    print("loss", loss)
+
+    pred = torch.max(example_out.data, 1)
+    print("pred", pred)
+
