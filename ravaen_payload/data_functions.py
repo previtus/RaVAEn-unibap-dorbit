@@ -493,6 +493,37 @@ class DataModule(torch.nn.Module): # torch.nn.Module # pl.LightningDataModule
                           shuffle=False, num_workers=num_workers)
 
 
+
+class DataModuleDummy(DataModule): # torch.nn.Module # pl.LightningDataModule
+    # if we set in_memory to True, it loads the data faster, but the memory may run out. If set to False, the actual
+    # data loading occurs only when tasked.
+    def __init__(self, settings, data_normalizer, in_memory=False):
+        super().__init__(settings, data_normalizer, in_memory)
+
+    def prepare_data(self):
+        # Could contain data download and unpacking...
+        pass
+
+    def setup(self, num_tiles, number_of_bands, stage=None):
+        if self.setup_finished:
+            return True  # to prevent double setup
+
+        tiles = [np.random.rand(number_of_bands, 32, 32) for i in range(num_tiles)]
+        print("Altogether we have", len(tiles), "tiles (randomized dummies).")
+
+        tiles_train = tiles
+        tiles_test = []
+        tiles_val = []
+
+        print("train, test, val:", len(tiles_train), len(tiles_test), len(tiles_val))
+
+        self.train_dataset = TileDataset(tiles_train, self.settings["dataset"], self.data_normalizer, self.in_memory)
+        self.test_dataset = TileDataset(tiles_test, self.settings["dataset"], self.data_normalizer, self.in_memory)
+        self.val_dataset = TileDataset(tiles_val, self.settings["dataset"], self.data_normalizer, self.in_memory)
+
+        self.setup_finished = True
+
+
 def load_datamodule(settings_dataloader, file_path, in_memory):
     # load data of this file
     settings_dataloader_local = settings_dataloader.copy()
@@ -505,8 +536,20 @@ def load_datamodule(settings_dataloader, file_path, in_memory):
 
     return data_module # data_module.train_dataloader()
 
+def create_dummy_data_module_v2(settings_dataloader, file_path, in_memory, num_tiles = 225, number_of_bands = 4):
+    # load data of this file
+    settings_dataloader_local = settings_dataloader.copy()
+    settings_dataloader_local["dataset"]["data_base_path"] = file_path
 
-def create_dummy_dataloader(settings_dataloader, num_tiles = 225, number_of_bands = 4):
+    data_normalizer = settings_dataloader["normalizer"](settings_dataloader)
+    data_module = DataModuleDummy(settings_dataloader_local, data_normalizer, in_memory)
+    data_module.setup(num_tiles, number_of_bands)
+    data_normalizer.setup(data_module)
+
+    return data_module # data_module.train_dataloader()
+
+
+def create_dummy_dataloader_v1(settings_dataloader, num_tiles = 225, number_of_bands = 4):
     settings_dataloader_local = settings_dataloader.copy()
     print(settings_dataloader_local)
 

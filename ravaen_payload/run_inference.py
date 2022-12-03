@@ -1,6 +1,6 @@
 import time, os
 import numpy as np
-from data_functions import DataNormalizerLogManual_ExtraStep, load_datamodule, file2uniqueid, create_dummy_dataloader
+from data_functions import DataNormalizerLogManual_ExtraStep, load_datamodule, file2uniqueid, create_dummy_data_module_v2
 from unibap_dataset_query import get_unibap_dataset_data
 from model_functions import Module, DeeperVAE
 from util_functions import which_device, seed_all_torch_numpy_random
@@ -163,7 +163,9 @@ def main(settings):
         except:
             print("[!!!] Failed loading the data! Will use a dummy dataloder instead!")
             number_of_bands = cfg_module["input_shape"][0]
-            dataloader, tiles_n = create_dummy_dataloader(settings_dataloader, number_of_bands=number_of_bands)
+            data_module = create_dummy_data_module_v2(settings_dataloader, file_path, in_memory, number_of_bands=number_of_bands)
+            tiles_n = len(data_module.train_dataset)
+            dataloader = data_module.train_dataloader()
         dataloader_create = time.time() - time_before_dataloader
         logged["time_file_" + str(file_i).zfill(3) + "_dataloader_create"] = dataloader_create
 
