@@ -63,6 +63,7 @@ def main(settings):
     NUM_WORKERS = int(settings["num_workers"])
     settings_dataloader ['dataloader']['num_workers'] = NUM_WORKERS
     SEED = int(settings["seed"])
+    force_dummy_data_number_of_files = settings["force_dummy_data_number_of_files"]
 
     keep_latent_log_var = settings["special_save_logvars"]
 
@@ -73,7 +74,7 @@ def main(settings):
     try:
         selected_files = get_unibap_dataset_data(settings)
     except:
-        selected_files = [None]
+        selected_files = [None for i in range(force_dummy_data_number_of_files)]
     print("Will run on a sequence of:", selected_files)
     files_query_time = time.time() - time_before_file_query
     logged["time_files_query"] = files_query_time
@@ -316,6 +317,8 @@ if __name__ == "__main__":
                         help="Use model with random weights (fallback if we don't have weights).")
     parser.add_argument('--force_dummy_data', default=False,
                         help="Use dataloader with random data (fallback if we can't load real files, has the same shapes!).")
+    parser.add_argument('--force_dummy_data_number_of_files', default=26,
+                        help="How many dummy files we have? Should be the same num as in other experiments.")
 
     # model version overrides (without weights, likely should be used with force_dummy_model and force_dummy_data set to True
     parser.add_argument('--override_channels', default=None, # example: 10
