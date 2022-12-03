@@ -590,7 +590,8 @@ class DeeperVAE(BaseVAE):
         :param input: (Tensor) Input tensor to encoder [N x C x H x W]
         :return: (Tensor) List of latent codes
         """
-        result = self.encoder(input)
+        # result = self.encoder(input)
+        result = self.encoder(torch.nan_to_num(input))
 
         if verbose:
             x = input
@@ -642,7 +643,7 @@ class DeeperVAE(BaseVAE):
         return eps * std + mu
 
     def forward(self, input: Tensor, **kwargs) -> List[Tensor]:
-        mu, log_var = self.encode(torch.nan_to_num(input))
+        mu, log_var = self.encode(input)
         z = self.reparameterize(mu, log_var)
         return [self.decode(z), mu, log_var]
 
