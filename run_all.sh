@@ -30,4 +30,9 @@ python3.7 tile_classifier/run_train.py --batch_size 256 --multiclass True --numc
 
 top -n 1 -b > results/top_2_after_train.txt
 
+# ADD RUNS
+# rgb
+python3.7 ravaen_payload/run_inference.py --batch_size 64 --override_channels 3 --log_name "exp3band" --nosave True
+python3.7 ravaen_payload/run_inference.py --batch_size 64 --override_channels 6 --log_name "exp6band" --nosave True
+python3.7 ravaen_payload/run_inference.py --batch_size 64 --override_channels 8 --log_name "exp8band" --nosave True
 
