@@ -94,3 +94,7 @@ cifar/cifar-10-batches-py
 cifar/cifar-10-python.tar.gz
 notebooks/data/cifar-10-python.tar.gz
 notebooks/data
+
+# Dataset files
+*.tif
+/results/*

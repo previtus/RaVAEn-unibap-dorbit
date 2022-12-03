@@ -75,6 +75,13 @@ def main(settings):
     files_query_time = time.time() - time_before_file_query
     logged["time_files_query"] = files_query_time
 
+    if settings["save_only_k_latents"] == "all":
+        save_only_k_latents = len(selected_files)
+    else:
+        save_only_k_latents = int(settings["save_only_k_latents"])
+
+
+
     seed_all_torch_numpy_random(SEED)
 
     ### MODEL
@@ -177,7 +184,8 @@ def main(settings):
 
 
         time_before_saves = time.time()
-        save_latents(settings["results_dir"], latents, uid_name=this_file_uid)
+        if file_i < save_only_k_latents:
+            save_latents(settings["results_dir"], latents, uid_name=this_file_uid)
         if keep_latent_log_var: save_latents(settings["results_dir"], latents_log_var, uid_name=this_file_uid, log_var=True)
 
         latents_per_file[file_i] = latents
@@ -215,6 +223,8 @@ if __name__ == "__main__":
                         help="Full path to local folder with Sentinel-2 files")
     parser.add_argument('--selected_images', default="all", #"all" / "tenpercent" / "first_N" / "0,1,2"
                         help="Indices to the files we want to use. Files will be processed sequentially, each pair evaluated for changes.")
+    parser.add_argument('--save_only_k_latents', default="10", # number of "all"
+                        help="How many latents do we want to save?. Defaults to 10, can select 'all'.")
     parser.add_argument('--model', default='weights/model_rgbnir',
                         help="Path to the model weights")
     parser.add_argument('--results_dir', default='results/',
