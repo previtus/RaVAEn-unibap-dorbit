@@ -9,6 +9,7 @@ python3.7 ravaen_payload/run_inference.py --batch_size 16
 python3.7 ravaen_payload/run_inference.py --batch_size 32
 python3.7 ravaen_payload/run_inference.py --batch_size 64
 python3.7 ravaen_payload/run_inference.py --batch_size 128
+python3.7 ravaen_payload/run_inference.py --batch_size 250 # all data
 
 python3.7 ravaen_payload/run_inference.py --batch_size 32 --override_channels 10 --log_name "highres10band"
 python3.7 ravaen_payload/run_inference.py --batch_size 64 --override_channels 10 --log_name "highres10band"

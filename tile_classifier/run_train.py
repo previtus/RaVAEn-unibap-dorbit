@@ -16,6 +16,7 @@ if plot:
         plot = False
 
 def main(settings):
+    print("settings=",settings)
     main_start_time = time.time()
 
     logged = {}
@@ -73,8 +74,10 @@ def main(settings):
     time_before_model = time_now
 
     if settings["multiclass"]:
-        numclasses = settings["numclasses"]
-        model = LilMulticlassModel(output_size=numclasses)
+        numclasses = int(settings["numclasses"])
+        print("output_size=",numclasses)
+        # model = LilMulticlassModel(input_size = 128, output_size=numclasses)
+        model = LilMulticlassModel(128,numclasses)
         # example_in = torch.zeros((32, 128))
         # example_out = model(example_in)
         # example_gt = 3*torch.ones((32)).long()

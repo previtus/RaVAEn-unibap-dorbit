@@ -19,8 +19,8 @@ class LilMulticlassModel(torch.nn.Module):
     def forward(self, x):
         return self.l1(x)
 
-        x = torch.sigmoid(self.l1(x))
-        return self.l2(x)
+        # x = torch.sigmoid(self.l1(x))
+        # return self.l2(x)
 
     def training_step(self, batch, batch_idx):
         # used only in pl
