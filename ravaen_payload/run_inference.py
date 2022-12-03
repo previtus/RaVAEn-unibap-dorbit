@@ -86,7 +86,14 @@ def main(settings):
     #fallback variables: (by default False, if model or data loading fails, this will be triggered)
     force_dummy_model = settings["force_dummy_model"]
     force_dummy_data = settings["force_dummy_data"]
-
+    override_channels = settings["override_channels"]
+    if override_channels is not None:
+        override_channels = int(override_channels)
+        cfg_module["input_shape"] = (override_channels, 32, 32) # model input size
+        from data_functions import DataNormalizerLogManual
+        settings_dataloader['normalizer'] = DataNormalizerLogManual # normalizer with arbitrary size inp.
+        force_dummy_model = True # no model weights for arbitrary channel sizes
+        force_dummy_data = True # and no data
 
     seed_all_torch_numpy_random(SEED)
 
@@ -154,7 +161,8 @@ def main(settings):
             dataloader = data_module.train_dataloader()
         except:
             print("[!!!] Failed loading the data! Will use a dummy dataloder instead!")
-            dataloader, tiles_n = create_dummy_dataloader(settings_dataloader)
+            number_of_bands = cfg_module["input_shape"][0]
+            dataloader, tiles_n = create_dummy_dataloader(settings_dataloader, number_of_bands=number_of_bands)
         dataloader_create = time.time() - time_before_dataloader
         logged["time_file_" + str(file_i).zfill(3) + "_dataloader_create"] = dataloader_create
 
@@ -266,7 +274,7 @@ if __name__ == "__main__":
     import argparse
 
     custom_path = ""
-    custom_path = "../" # only on test machine ...
+    # custom_path = "../" # only on test machine ...
 
     parser = argparse.ArgumentParser('Run inference')
     # parser.add_argument('--folder', default="/home/vitek/Vitek/Work/Trillium_RaVAEn_2/data/dataset of s2/unibap_dataset/",
@@ -308,6 +316,10 @@ if __name__ == "__main__":
                         help="Use model with random weights (fallback if we don't have weights).")
     parser.add_argument('--force_dummy_data', default=False,
                         help="Use dataloader with random data (fallback if we can't load real files, has the same shapes!).")
+
+    # model version overrides (without weights, likely should be used with force_dummy_model and force_dummy_data set to True
+    parser.add_argument('--override_channels', default=None, # example: 10
+                        help="Override number of channels in the model. (Note that this will trigger fallback mechanisms with dummy model and data).")
 
 
     args = vars(parser.parse_args())

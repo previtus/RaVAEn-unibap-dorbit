@@ -494,6 +494,7 @@ class DeeperVAE(BaseVAE):
         assert input_shape[1] >= 2 ** len(hidden_channels), "Cannot have so many downscaling layers"
 
         self.latent_dim = latent_dim
+        print("\nINPUT shape:", input_shape)
         print("\nLATENT SPACE size:", latent_dim)
 
         # Calculate size of encoder output

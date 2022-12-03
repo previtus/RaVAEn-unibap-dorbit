@@ -151,7 +151,7 @@ if __name__ == "__main__":
     import argparse
 
     custom_path = ""
-    custom_path = "../" # only on test machine ...
+    # custom_path = "../" # only on test machine ...
 
     parser = argparse.ArgumentParser('Run training tile classifier')
     parser.add_argument('--dataset_as_np', default=custom_path+"weights/train_dataset_as_np.npz",

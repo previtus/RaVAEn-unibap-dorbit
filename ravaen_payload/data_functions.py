@@ -506,14 +506,12 @@ def load_datamodule(settings_dataloader, file_path, in_memory):
     return data_module # data_module.train_dataloader()
 
 
-def create_dummy_dataloader(settings_dataloader, num_tiles = 225):
+def create_dummy_dataloader(settings_dataloader, num_tiles = 225, number_of_bands = 4):
     settings_dataloader_local = settings_dataloader.copy()
     print(settings_dataloader_local)
 
-    bands_select = settings_dataloader_local['dataset']['bands']
     tile_size = settings_dataloader_local['dataset']['tile_px_size']
-    # data_shape = (num_tiles, len(bands_select), tile_size, tile_size)
-    data = np.random.rand( num_tiles, len(bands_select), tile_size, tile_size )
+    data = np.random.rand( num_tiles, number_of_bands, tile_size, tile_size )
     import torch
     data = torch.from_numpy(data).float() # default float gets interpretted as tensor Double
     print("Made up random data:", data.shape)
