@@ -66,6 +66,7 @@ def main(settings):
     force_dummy_data_number_of_files = settings["force_dummy_data_number_of_files"]
 
     keep_latent_log_var = settings["special_save_logvars"]
+    nosave = settings["nosave"]
 
     in_memory = not settings["special_keep_only_indices_in_mem"]
     if not in_memory: print("Careful, data is loaded with each batch, IO will be slower! (Change special_keep_only_indices_in_mem to default False if you don't want that!)")
@@ -231,9 +232,9 @@ def main(settings):
 
         time_before_saves = time.time()
         try:
-            if file_i < save_only_k_latents:
+            if file_i < save_only_k_latents and not nosave:
                 save_latents(settings["results_dir"], latents, uid_name=this_file_uid)
-            if keep_latent_log_var: save_latents(settings["results_dir"], latents_log_var, uid_name=this_file_uid, log_var=True)
+                if keep_latent_log_var: save_latents(settings["results_dir"], latents_log_var, uid_name=this_file_uid, log_var=True)
         except:
             print("[!!!] Failed saving the latents! No recovery needed.")
 
@@ -244,7 +245,8 @@ def main(settings):
         if cd_calculated:
             try:
                 predicted_distances = np.asarray(predicted_distances).flatten()
-                save_change(settings["results_dir"], predicted_distances, previous_uid_name=previous_file_uid, uid_name=this_file_uid)
+                if not nosave:
+                    save_change(settings["results_dir"], predicted_distances, previous_uid_name=previous_file_uid, uid_name=this_file_uid)
                 # print("DEBUG predicted_distances, previous_file, file_i", predicted_distances.shape, previous_file, file_i)
                 if plot:
                     # plot_change(settings["results_dir"],predicted_distances, previous_file, file_i)
@@ -286,7 +288,7 @@ if __name__ == "__main__":
                         help="Full path to local folder with Sentinel-2 files")
     parser.add_argument('--selected_images', default="all", #"all" / "tenpercent" / "first_N" / "0,1,2"
                         help="Indices to the files we want to use. Files will be processed sequentially, each pair evaluated for changes.")
-    parser.add_argument('--save_only_k_latents', default="10", # number of "all"
+    parser.add_argument('--save_only_k_latents', default="8", # number of "all"
                         help="How many latents do we want to save?. Defaults to 10, can select 'all'.")
     parser.add_argument('--model', default=custom_path+'weights/model_rgbnir',
                         help="Path to the model weights")
@@ -325,6 +327,8 @@ if __name__ == "__main__":
     # model version overrides (without weights, likely should be used with force_dummy_model and force_dummy_data set to True
     parser.add_argument('--override_channels', default=None, # example: 10
                         help="Override number of channels in the model. (Note that this will trigger fallback mechanisms with dummy model and data).")
+    parser.add_argument('--nosave', default=False,
+                        help="Skip saving latents and change det results (for dummy experiments).")
 
 
     args = vars(parser.parse_args())
