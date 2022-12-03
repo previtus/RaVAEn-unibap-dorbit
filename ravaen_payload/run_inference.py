@@ -1,6 +1,6 @@
 import time, os
 import numpy as np
-from data_functions import DataNormalizerLogManual_ExtraStep, load_datamodule, file2uniqueid
+from data_functions import DataNormalizerLogManual_ExtraStep, load_datamodule, file2uniqueid, create_dummy_dataloader
 from unibap_dataset_query import get_unibap_dataset_data
 from model_functions import Module, DeeperVAE
 from util_functions import which_device, seed_all_torch_numpy_random
@@ -17,7 +17,7 @@ import json
 # -- Keep the same: --
 BANDS = [0,1,2,3] # Unibap format
 LATENT_SIZE = 128
-plot = False # if set to True, needs matplotlib
+plot = True # if set to True, needs matplotlib
 if plot:
     try:
         import matplotlib as plt
@@ -70,7 +70,10 @@ def main(settings):
     if not in_memory: print("Careful, data is loaded with each batch, IO will be slower! (Change special_keep_only_indices_in_mem to default False if you don't want that!)")
 
     time_before_file_query = time.time()
-    selected_files = get_unibap_dataset_data(settings)
+    try:
+        selected_files = get_unibap_dataset_data(settings)
+    except:
+        selected_files = [None]
     print("Will run on a sequence of:", selected_files)
     files_query_time = time.time() - time_before_file_query
     logged["time_files_query"] = files_query_time
@@ -80,6 +83,9 @@ def main(settings):
     else:
         save_only_k_latents = int(settings["save_only_k_latents"])
 
+    #fallback variables: (by default False, if model or data loading fails, this will be triggered)
+    force_dummy_model = settings["force_dummy_model"]
+    force_dummy_data = settings["force_dummy_data"]
 
 
     seed_all_torch_numpy_random(SEED)
@@ -88,12 +94,31 @@ def main(settings):
     time_before_model_load = time.time()
     cfg_train = {}
     module = Module(DeeperVAE, cfg_module, cfg_train, model_cls_args_VAE)
-    module.model.encoder.load_state_dict(torch.load(settings["model"]+"_encoder.pt"))
-    module.model.fc_mu.load_state_dict(torch.load(settings["model"]+"_fc_mu.pt"))
-    if keep_latent_log_var:
-        module.model.fc_var.load_state_dict(torch.load(settings["model"]+"_fc_var.pt"))
 
-    print("Loaded model!")
+    try:
+        if force_dummy_model:
+            assert False, "Forced dummy model!"
+        else:
+            module.model.encoder.load_state_dict(torch.load(settings["model"]+"_encoder.pt"))
+            module.model.fc_mu.load_state_dict(torch.load(settings["model"]+"_fc_mu.pt"))
+            if keep_latent_log_var:
+                module.model.fc_var.load_state_dict(torch.load(settings["model"]+"_fc_var.pt"))
+
+            print("Loaded model!")
+    except:
+        print("[!!!] Failed loading the model! Will instead continue with random init weights!")
+        try:
+            import torch.nn as nn
+            seed_all_torch_numpy_random(int(time.time()))
+            def init_params(m):
+                if type(m) == nn.Linear or type(m) == nn.Conv2d:
+                    m.weight.data = torch.randn(m.weight.size()) * .01  # Random weight initialisation
+                    m.bias.data = torch.zeros(m.bias.size())
+            module.model.apply(init_params) # Reinitialise the model
+            print("Weights randomly initialised!")
+        except:
+            print("(and failed again when trying to init random)")
+
     module.model.eval()
     model = module.model
     # device = which_device(model)
@@ -109,16 +134,27 @@ def main(settings):
         previous_file = file_i - 1
         previous_file_name = selected_files[previous_file]
 
-        previous_file_uid = file2uniqueid(previous_file_name)
-        this_file_uid = file2uniqueid(file_path)
+        try:
+            previous_file_uid = file2uniqueid(previous_file_name)
+            this_file_uid = file2uniqueid(file_path)
+        except:
+            previous_file_uid = "before"
+            this_file_uid = "after"
+
         if file_i == 0:
             previous_file_uid = "FirstFile"
         print("CD",file_i,"/",len(selected_files),":",previous_file_uid,"<>",this_file_uid)
 
         time_before_dataloader = time.time()
-        data_module = load_datamodule(settings_dataloader, file_path, in_memory)
-        tiles_n = len(data_module.train_dataset)
-        dataloader = data_module.train_dataloader()
+        try:
+            if force_dummy_data:
+                assert False, "Forced dummy data!"
+            data_module = load_datamodule(settings_dataloader, file_path, in_memory)
+            tiles_n = len(data_module.train_dataset)
+            dataloader = data_module.train_dataloader()
+        except:
+            print("[!!!] Failed loading the data! Will use a dummy dataloder instead!")
+            dataloader, tiles_n = create_dummy_dataloader(settings_dataloader)
         dataloader_create = time.time() - time_before_dataloader
         logged["time_file_" + str(file_i).zfill(3) + "_dataloader_create"] = dataloader_create
 
@@ -136,7 +172,6 @@ def main(settings):
 
         index = 0
         for batch in dataloader:
-
             time_before_encode = time.time()
             mus, log_vars = encode_batch(model, batch, keep_latent_log_var)
 
@@ -184,21 +219,28 @@ def main(settings):
 
 
         time_before_saves = time.time()
-        if file_i < save_only_k_latents:
-            save_latents(settings["results_dir"], latents, uid_name=this_file_uid)
-        if keep_latent_log_var: save_latents(settings["results_dir"], latents_log_var, uid_name=this_file_uid, log_var=True)
+        try:
+            if file_i < save_only_k_latents:
+                save_latents(settings["results_dir"], latents, uid_name=this_file_uid)
+            if keep_latent_log_var: save_latents(settings["results_dir"], latents_log_var, uid_name=this_file_uid, log_var=True)
+        except:
+            print("[!!!] Failed saving the latents! No recovery needed.")
 
         latents_per_file[file_i] = latents
 
         if previous_file in latents_per_file: del latents_per_file[previous_file] # longer history no longer needed
 
         if cd_calculated:
-            predicted_distances = np.asarray(predicted_distances).flatten()
-            save_change(settings["results_dir"], predicted_distances, previous_uid_name=previous_file_uid, uid_name=this_file_uid)
-            # print("DEBUG predicted_distances, previous_file, file_i", predicted_distances.shape, previous_file, file_i)
-            if plot:
-                # plot_change(settings["results_dir"],predicted_distances, previous_file, file_i)
-                plot_tripple(settings["results_dir"],predicted_distances, previous_file, file_i, selected_files)
+            try:
+                predicted_distances = np.asarray(predicted_distances).flatten()
+                save_change(settings["results_dir"], predicted_distances, previous_uid_name=previous_file_uid, uid_name=this_file_uid)
+                # print("DEBUG predicted_distances, previous_file, file_i", predicted_distances.shape, previous_file, file_i)
+                if plot:
+                    # plot_change(settings["results_dir"],predicted_distances, previous_file, file_i)
+                    plot_tripple(settings["results_dir"],predicted_distances, previous_file, file_i, selected_files)
+            except:
+                print("[!!!] Failed saving the change detection output map! No recovery needed.")
+
         time_after_saved = time.time() - time_before_saves
         logged["time_file_"+ str(file_i).zfill(3) +"_save_latents_changemap"] = time_after_saved
 
@@ -210,24 +252,34 @@ def main(settings):
     logged["time_main"] = main_run_time
 
     print(logged)
-    with open(os.path.join(settings["results_dir"], settings["log_name"]+"_"+str(BATCH_SIZE)+"batch.json"), "w") as fh:
-        json.dump(logged, fh)
+    try:
+        with open(os.path.join(settings["results_dir"], settings["log_name"]+"_"+str(BATCH_SIZE)+"batch.json"), "w") as fh:
+            json.dump(logged, fh)
+    except:
+        print("[!!!] Failure! Couldn't save the logs! Instead printing it out into the log:")
+        print("[LOG_PRINT_START]")
+        print("[SETTINGS]", settings["log_name"] + "_" + str(BATCH_SIZE))
+        print(logged)
+        print("[LOG_PRINT_END]")
 
 if __name__ == "__main__":
     import argparse
 
+    custom_path = ""
+    custom_path = "../" # only on test machine ...
+
     parser = argparse.ArgumentParser('Run inference')
     # parser.add_argument('--folder', default="/home/vitek/Vitek/Work/Trillium_RaVAEn_2/data/dataset of s2/unibap_dataset/",
     #                     help="Full path to local folder with Sentinel-2 files")
-    parser.add_argument('--folder', default="unibap_dataset/",
+    parser.add_argument('--folder', default=custom_path+"unibap_dataset/",
                         help="Full path to local folder with Sentinel-2 files")
     parser.add_argument('--selected_images', default="all", #"all" / "tenpercent" / "first_N" / "0,1,2"
                         help="Indices to the files we want to use. Files will be processed sequentially, each pair evaluated for changes.")
     parser.add_argument('--save_only_k_latents', default="10", # number of "all"
                         help="How many latents do we want to save?. Defaults to 10, can select 'all'.")
-    parser.add_argument('--model', default='weights/model_rgbnir',
+    parser.add_argument('--model', default=custom_path+'weights/model_rgbnir',
                         help="Path to the model weights")
-    parser.add_argument('--results_dir', default='results/',
+    parser.add_argument('--results_dir', default=custom_path+'results/',
                         help="Path where to save the results")
     parser.add_argument('--log_name', default='log',
                         help="Name of the log (batch size will be appended in any case).")
@@ -251,6 +303,12 @@ if __name__ == "__main__":
                         help="Dataloader doesn't load the tiles unless asked, this will support even huge S2 scenes, but is slow.")
     parser.add_argument('--special_save_logvars', default=False,
                         help="Save log var outputs.")
+
+    parser.add_argument('--force_dummy_model', default=False,
+                        help="Use model with random weights (fallback if we don't have weights).")
+    parser.add_argument('--force_dummy_data', default=False,
+                        help="Use dataloader with random data (fallback if we can't load real files, has the same shapes!).")
+
 
     args = vars(parser.parse_args())
 

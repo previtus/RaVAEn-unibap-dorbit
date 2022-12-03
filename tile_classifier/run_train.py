@@ -27,17 +27,26 @@ def main(settings):
     BATCH_SIZE = int(settings["batch_size"])
     EPOCHS = int(settings["train_epochs"])
 
+    #fallback variables: (by default False, if model or data loading fails, this will be triggered)
+    force_dummy_data = settings["force_dummy_data"]
 
     print("Will load data from", dataset_load_path, ", train and save the model to, ",trained_model_save_path)
 
     ### DATASET:
     time_before_dataset = time.time()
     try:
+        if force_dummy_data: assert False, "Forced dummy data!"
         X_latents, _, Y = generate_dataset()
     except:
-        loaded = np.load(dataset_load_path)
-        X_latents = loaded["X_latents"]
-        Y = loaded["Y"]
+        try:
+            if force_dummy_data: assert False, "Forced dummy data!"
+            loaded = np.load(dataset_load_path)
+            X_latents = loaded["X_latents"]
+            Y = loaded["Y"]
+        except:
+            print("[!!!] Failed loading the dataset! Will make a dummy data insteady")
+            X_latents = np.random.rand( 1305, 128 )
+            Y = np.random.rand( 1305, )
 
     print("Dataset:")
     print("X latents:", X_latents.shape)
@@ -110,7 +119,7 @@ def main(settings):
     print("Losses:", training_losses)
 
     start_time = time.time()
-    torch.save(model.state_dict(), trained_model_save_path)
+    torch.save(model.state_dict(), trained_model_save_path+"_"+str(BATCH_SIZE)+"batch.pt")
     save_model_time = time.time() - start_time
     logged["time_save_model"] = save_model_time
 
@@ -141,12 +150,15 @@ def main(settings):
 if __name__ == "__main__":
     import argparse
 
+    custom_path = ""
+    custom_path = "../" # only on test machine ...
+
     parser = argparse.ArgumentParser('Run training tile classifier')
-    parser.add_argument('--dataset_as_np', default="weights/train_dataset_as_np.npz",
+    parser.add_argument('--dataset_as_np', default=custom_path+"weights/train_dataset_as_np.npz",
                         help="Path to the prepared latents dataset.")
-    parser.add_argument('--trained_model_path', default='results/tile_model.pt',
-                        help="Where to save the model weights")
-    parser.add_argument('--results_dir', default='results/',
+    parser.add_argument('--trained_model_path', default=custom_path+'results/tile_model',
+                        help="Where to save the model weights  (batch size will be appended in any case).")
+    parser.add_argument('--results_dir', default=custom_path+'results/',
                         help="Path where to save the results")
     parser.add_argument('--log_name', default='tile_classifier_log',
                         help="Name of the log (batch size will be appended in any case).")
@@ -157,6 +169,9 @@ if __name__ == "__main__":
 
     parser.add_argument('--train_epochs', default=10,
                         help="How many epochs to train for")
+
+    parser.add_argument('--force_dummy_data', default=False,
+                        help="Force random data (fallback if we can't load real files, has the same shapes!).")
 
     # parser.add_argument('--time-limit', type=int, default=300,
     #                     help="time limit for running inference [300]")
