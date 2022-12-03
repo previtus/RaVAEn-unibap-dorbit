@@ -1,6 +1,6 @@
 from dataset import generate_dataset
 import torch
-from model_pytorch import LilModel, LilDataset, get_n_params
+from model_pytorch import LilModel, LilMulticlassModel, LilDataset, get_n_params
 from torch.utils.data import DataLoader
 import numpy as np
 import time
@@ -58,7 +58,10 @@ def main(settings):
     ### MODEL and training:
     time_before_dataloader = time.time()
     X_latents = torch.from_numpy(X_latents).float()
-    Y = torch.from_numpy(Y).float().unsqueeze(1)
+    if settings["multiclass"]:
+        Y = torch.from_numpy(Y).long() # no unsqueeze for that model output...
+    else:
+        Y = torch.from_numpy(Y).float().unsqueeze(1)
     print("X latents:", X_latents.shape, X_latents.dtype)
     print("Y labels:", Y.shape, Y.dtype)
 
@@ -69,7 +72,19 @@ def main(settings):
     logged["time_dataloader_load"] = dataloader_load_time
     time_before_model = time_now
 
-    model = LilModel()
+    if settings["multiclass"]:
+        numclasses = settings["numclasses"]
+        model = LilMulticlassModel(output_size=numclasses)
+        # example_in = torch.zeros((32, 128))
+        # example_out = model(example_in)
+        # example_gt = 3*torch.ones((32)).long()
+        # print(example_in.shape, "=>", example_out.shape)
+        # loss = model.criterion(example_out, example_gt)
+        # loss.backward()
+        # print("loss", loss)
+
+    else:
+        model = LilModel()
     print(model)
     print(get_n_params(model))
 
@@ -118,8 +133,12 @@ def main(settings):
     print('Finished Training')
     print("Losses:", training_losses)
 
+    name_add = ""
+    if settings["multiclass"]:
+        numclasses = settings["numclasses"]
+        name_add += "_multiclass_"+str(numclasses)+"classes"
     start_time = time.time()
-    torch.save(model.state_dict(), trained_model_save_path+"_"+str(BATCH_SIZE)+"batch.pt")
+    torch.save(model.state_dict(), trained_model_save_path+"_"+str(BATCH_SIZE)+"batch"+name_add+".pt")
     save_model_time = time.time() - start_time
     logged["time_save_model"] = save_model_time
 
@@ -144,14 +163,14 @@ def main(settings):
 
 
     print(logged)
-    with open(os.path.join(settings["results_dir"], settings["log_name"]+"_"+str(BATCH_SIZE)+"batch.json"), "w") as fh:
+    with open(os.path.join(settings["results_dir"], settings["log_name"]+"_"+str(BATCH_SIZE)+"batch"+name_add+".json"), "w") as fh:
         json.dump(logged, fh)
 
 if __name__ == "__main__":
     import argparse
 
     custom_path = ""
-    # custom_path = "../" # only on test machine ...
+    custom_path = "../" # only on test machine ...
 
     parser = argparse.ArgumentParser('Run training tile classifier')
     parser.add_argument('--dataset_as_np', default=custom_path+"weights/train_dataset_as_np.npz",
@@ -169,6 +188,11 @@ if __name__ == "__main__":
 
     parser.add_argument('--train_epochs', default=10,
                         help="How many epochs to train for")
+
+    parser.add_argument('--multiclass', default=False,
+                        help="If we use mutliple class (False to turn off)")
+    parser.add_argument('--numclasses', default=1,
+                        help="How many classes?")
 
     parser.add_argument('--force_dummy_data', default=False,
                         help="Force random data (fallback if we can't load real files, has the same shapes!).")

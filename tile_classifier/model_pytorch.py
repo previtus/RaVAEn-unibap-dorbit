@@ -31,6 +31,8 @@ class LilMulticlassModel(torch.nn.Module):
         y_hat = self(x)
         # loss = F.cross_entropy(y_hat, y)
         loss = self.criterion(y_hat, y)
+        # matches = (torch.argmax(outputs, dim=1) == y).sum()
+
         return loss
 
     def configure_optimizers(self):
@@ -115,7 +117,8 @@ if __name__ == "__main__":
     print(get_n_params(model))
 
     example_out = model(example_in)
-    example_gt = torch.zeros((32)).long()
+
+    example_gt = 3*torch.ones((32)).long()
     print(example_in.shape, "=>", example_out.shape)
 
     criterion = model.criterion
