@@ -18,6 +18,7 @@ COPY ./ravaen_payload ./ravaen_payload
 COPY ./tile_classifier ./tile_classifier
 COPY run_all.sh run_all.sh
 COPY run_experimental.sh run_experimental.sh
+COPY run_vino.sh run_vino.sh
 
 #WORKDIR /ravaen_payload
 #CMD ["python3.7","run_inference.py"]
