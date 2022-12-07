@@ -21,20 +21,30 @@ def plot_all_files(log_path = "../results/logs.json", ignore_file_i_above=None):
     plot_measurements([times_with_io, times_without_io,times_one_encode,times_one_compare],
                       ["Processing time with IO", "Processing time without IO", "One batch encode", "One batch compare"])
 
-def plot_times_multiple_runs(log_paths, run_names):
+def plot_times_multiple_runs(log_paths, run_names, plot_title = "", ignore_list=[]):
     num_runs = len(log_paths)
 
     observed_times = [
         "total_encode_compare_with_IO",
         "total_encode_compare",
-        "first_full_batch_encode",
-        "first_full_batch_compare",
-        "first_full_batch_encode_and_compare", # sanitycheck - it should be the same as the last two added
+        # "first_full_batch_encode",
+        # "first_full_batch_compare",
+        # "first_full_batch_encode_and_compare", # sanitycheck - it should be the same as the last two added
         "dataloader_create",
         "save_latents_changemap",
     ]
-    times_names = ["Processing time with IO", "Processing time without IO", "One batch encode", "One batch compare", "One batch enc+comp",
+    times_names = ["Encoding + IO", "Encoding only",
+                   # "One batch encode", "One batch compare", "One batch enc+comp",
                    "Create dataloader", "Save"]
+    if len(ignore_list) > 0:
+        for ignore_item in ignore_list:
+            for idx, a in enumerate(observed_times):
+                if ignore_item == a:
+                    del times_names[idx]
+                    del observed_times[idx]
+                    break
+
+
 
     means_per_runs = []
     stds_per_runs = []
@@ -73,12 +83,36 @@ def plot_times_multiple_runs(log_paths, run_names):
         std_data[run_name] = stds_per_runs[i]
 
     fig, ax = plt.subplots(figsize=(10, 5))
+    if len(plot_title) > 0:
+        plt.title(plot_title)
     custom_bar_plot(ax, data, std_data, total_width=.8, single_width=.9)
     plt.xticks(range(len(name_plots)), name_plots)
     plt.show()
 
 
 if __name__ == "__main__":
+    # logs from dorbit
+    logs_folder = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/_from_their_side_step2/results00_dec6/"
+    batchsizes = [32, 64, 128]
+    logs = [ logs_folder+"log_"+str(i)+"batch.json" for i in batchsizes]
+    names = [ "Batch Size "+str(i) for i in batchsizes]
+    plot_times_multiple_runs(logs, names, "VAE (RGB+NIR) encoding speed")
+
+    batchsizes = [32, 64, 128]
+    logs = [ logs_folder+"highres10band_"+str(i)+"batch.json" for i in batchsizes]
+    names = [ "Batch Size "+str(i) for i in batchsizes]
+    plot_times_multiple_runs(logs, names, "VAE (10 band) encoding speed")
+
+    bands = [3,6,8]
+    logs = [ logs_folder+"exp"+str(i)+"band_64batch.json" for i in bands]
+    log_4bands = logs_folder+"log_64batch.json"
+    log_10bands = logs_folder+"highres10band_64batch.json"
+    logs = [logs[0]] + [log_4bands] + logs[1:] + [log_10bands]
+    bands = [3, 4, 6, 8, 10]
+    names = [ "Bands "+str(i) for i in bands]
+    plot_times_multiple_runs(logs, names, "VAE encoding speed depending on the number of bands, batch size 64",
+                             ignore_list=["save_latents_changemap"])
+
     ignore_file_i_above = 10 #None # or 30
     log_path = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/logs_unibap/results06_withlogsv2/log_64batch.json"
     plot_all_files(log_path, ignore_file_i_above=ignore_file_i_above)

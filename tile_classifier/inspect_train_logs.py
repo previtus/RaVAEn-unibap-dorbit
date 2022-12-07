@@ -154,8 +154,6 @@ def inspect_train_logs(log_path = "../results/logs.json"):
     for k in times:
         print(k)
 
-
-    jknjknknn
     print("Used args:",args)
     print("Measured times:",times)
 
@@ -165,7 +163,7 @@ def inspect_train_logs(log_path = "../results/logs.json"):
     plot_measurements([times_traininig_epochs],
                       ["Training time per epoch"])
 
-def plot_train_times_multiple_runs(log_paths, run_names):
+def plot_train_times_multiple_runs(log_paths, run_names, plot_title=""):
     num_runs = len(log_paths)
 
     observed_times = [
@@ -210,6 +208,9 @@ def plot_train_times_multiple_runs(log_paths, run_names):
         std_data[run_name] = stds_per_runs[i]
 
     fig, ax = plt.subplots(figsize=(10, 5))
+    if len(plot_title) > 0:
+        plt.title(plot_title)
+
     custom_bar_plot(ax, data, std_data, total_width=.8, single_width=.9)
     plt.xticks(range(len(name_plots)), name_plots)
     plt.show()
@@ -262,6 +263,16 @@ def plot_other_times(log_paths, run_names):
 
 
 if __name__ == "__main__":
+    # logs from dorbit
+    logs_folder = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/_from_their_side_step2/results00_dec6/"
+    batchsizes = [32, 64, 128, 256]
+    logs = [ logs_folder+"tile_classifier_log_"+str(i)+"batch.json" for i in batchsizes]
+    names = ["Batch Size " + str(i) for i in batchsizes]
+    plot_train_times_multiple_runs(logs, names, "Training time, model: [128-Dense-1]")
+
+    logs = [logs_folder + "tile_classifier_log_" + str(i) + "batch_multiclass_4classes.json" for i in batchsizes]
+    plot_train_times_multiple_runs(logs, names, "Training time, model: [128-Dense-4], 4 classes")
+
     log_path = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/logs_unibap/results06_withlogsv2/tile_classifier_log_64batch.json"
     #inspect_train_logs(log_path)
 

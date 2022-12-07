@@ -28,7 +28,7 @@ def to_tile_able(img, tile_size=32):
     return img, [w_times,h_times]
 
 def show_img(img, show=True):
-    fig, ax = plt.subplots(1, 1, figsize=(3 * 5, 5), tight_layout=True)
+    fig, ax = plt.subplots(1, 1, figsize=(5, 5), tight_layout=True)
     img = np.clip(img / 3000., 0, 1)  # 3000
     rstplt.show(img, ax=ax)
     ax.axis("off")
@@ -66,6 +66,7 @@ def tile_location(tile_id, tile_size=32, grid_shape=[15,15]):
 def vis_image_with_predicted_labels(image_path, predictions, binary=True):
     img = load_as_image(image_path)
     img, grid_shape = to_tile_able(img)
+
     plot = show_img(img, show=False)
 
     n_tiles = int(grid_shape[0]*grid_shape[1])
@@ -85,6 +86,7 @@ def vis_image_with_predicted_labels(image_path, predictions, binary=True):
         dot_xs.append(dot_x)
         dot_ys.append(dot_y)
         cols.append(colour)
+
 
     plot.scatter(dot_xs, dot_ys, color=cols)
     plt.show()
