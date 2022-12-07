@@ -96,6 +96,7 @@ except Exception as e:
     print("2 failed CPU,", e)
 
 """
+#from model_to_vino_03_minimal import *
 
 model_path = "encoder_model.onnx"
 device = 'CPU'
@@ -130,40 +131,40 @@ res_onnx_cpu = example_output
 
 ### ON MYRIAD
 res_onnx_myriad = None
-try:
-    print("trying on MYRIAD!")
-    model_path = "encoder_model.onnx"
-    device = 'MYRIAD'
-    ie = IECore()
-    model = OpenVinoModel(ie, model_path)
-    exec_net = ie.load_network(network=model.net, device_name=device, config=None, num_requests=1)
-
-    print("Debug inputs:", list(exec_net.inputs.keys()), "and outputs:", list(exec_net.outputs.keys()))
-
-    example_input = np.random.rand(1, 4, 32, 32)
-    result = exec_net.infer({'input.1': example_input})
-    example_output = result['36']
-
-    print("example_input", example_input.shape)
-    print("example_output", example_output.shape)
-
-    num_images = 100
-    start = time.perf_counter()
-    for _ in range(num_images):
-        example_input = np.random.rand(64, 4, 32, 32)
-        result = exec_net.infer({'input.1': example_input})
-        example_output = result['36']
-    end = time.perf_counter()
-    time_onnx = end - start
-    print(
-        f"ONNX model in OpenVINO MYRIAD Runtime/CPU: {time_onnx/num_images:.3f} "
-        f"seconds per image, FPS: {num_images/time_onnx:.2f}"
-    )
-    print("example_input", example_input.shape)
-    print("example_output", example_output.shape)
-    res_onnx_myriad = example_output
-except Exception as e:
-    print("failed with", e)
+# try:
+#     print("trying on MYRIAD!")
+#     model_path = "encoder_model.onnx"
+#     device = 'MYRIAD'
+#     ie = IECore()
+#     model = OpenVinoModel(ie, model_path)
+#     exec_net = ie.load_network(network=model.net, device_name=device, config=None, num_requests=1)
+#
+#     print("Debug inputs:", list(exec_net.inputs.keys()), "and outputs:", list(exec_net.outputs.keys()))
+#
+#     example_input = np.random.rand(1, 4, 32, 32)
+#     result = exec_net.infer({'input.1': example_input})
+#     example_output = result['36']
+#
+#     print("example_input", example_input.shape)
+#     print("example_output", example_output.shape)
+#
+#     num_images = 100
+#     start = time.perf_counter()
+#     for _ in range(num_images):
+#         example_input = np.random.rand(64, 4, 32, 32)
+#         result = exec_net.infer({'input.1': example_input})
+#         example_output = result['36']
+#     end = time.perf_counter()
+#     time_onnx = end - start
+#     print(
+#         f"ONNX model in OpenVINO MYRIAD Runtime/CPU: {time_onnx/num_images:.3f} "
+#         f"seconds per image, FPS: {num_images/time_onnx:.2f}"
+#     )
+#     print("example_input", example_input.shape)
+#     print("example_output", example_output.shape)
+#     res_onnx_myriad = example_output
+# except Exception as e:
+#     print("failed with", e)
 
 ### Compare with the torch output
 
