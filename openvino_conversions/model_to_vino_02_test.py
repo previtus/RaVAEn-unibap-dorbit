@@ -22,8 +22,11 @@ except:
     ie = IECore()
     print("from openvino.inference_engine import IECore < works")
 
+OUT_NAME = "../weights_openvino/encoder_model"
+# V2: only the mu's part of the model
+OUT_NAME = "../weights_openvino/encoder_model_mu"
 
-model_path = Path("encoder_model").with_suffix(".pth")
+model_path = Path(OUT_NAME).with_suffix(".pth")
 onnx_path = model_path.with_suffix(".onnx")
 ir_path = model_path.with_suffix(".xml")
 example_input = np.random.rand(1,4,32,32)

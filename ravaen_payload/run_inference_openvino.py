@@ -106,7 +106,9 @@ def main(settings):
     time_before_model_load = time.time()
     cfg_train = {}
 
-    ONNX_MODEL_PATH = "../weights_openvino/encoder_model.onnx" # needs both .onnx and .bin
+    ONNX_MODEL_PATH = settings["model"]
+    print("Loading from ONNX_MODEL_PATH=",ONNX_MODEL_PATH)
+    # ONNX_MODEL_PATH = "../weights_openvino/encoder_model.onnx" # needs both .onnx and .bin
     model_predict_function = get_prediction_function(model_path=ONNX_MODEL_PATH, device=OPENVINO_DEVICE, batch_size=BATCH_SIZE)
 
     model_load_time = time.time() - time_before_model_load
@@ -272,8 +274,8 @@ if __name__ == "__main__":
                         help="Indices to the files we want to use. Files will be processed sequentially, each pair evaluated for changes.")
     parser.add_argument('--save_only_k_latents', default="8", # number of "all"
                         help="How many latents do we want to save?. Defaults to 10, can select 'all'.")
-    parser.add_argument('--model', default=custom_path+'weights/model_rgbnir',
-                        help="Path to the model weights")
+    parser.add_argument('--model', default=custom_path+'weights_openvino/encoder_model.onnx',
+                        help="Path to the ONNX model weights")
     parser.add_argument('--results_dir', default=custom_path+'results/',
                         help="Path where to save the results")
     parser.add_argument('--log_name', default='log_openvino',

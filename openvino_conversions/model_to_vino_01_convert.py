@@ -132,14 +132,21 @@ class EncoderOnly_MeansOnly(EncoderOnly):
 
 if __name__ == "__main__":
 
-
     TILE_SIZE = 32
     # keep_latent_log_var = False # ONNX isnt happy about Nones
     keep_latent_log_var = True
+
+    # V1: full encoder model
+    OUT_NAME = "encoder_model"
     model_encoder = EncoderOnly(keep_latent_log_var=keep_latent_log_var)
+
+    # V2: only the mu's part of the model
+    OUT_NAME = "encoder_model_mu"
+    model_encoder = EncoderOnly_MeansOnly(keep_latent_log_var=keep_latent_log_var)
+
     # print(model_encoder)
     model_path = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/codes/RaVAEn-unibap-dorbit/weights/model_rgbnir"
-    model_path = "weights/model_rgbnir"
+    # model_path = "weights/model_rgbnir"
 
     model_encoder.encoder.load_state_dict(torch.load(model_path + "_encoder.pt"))
     model_encoder.fc_mu.load_state_dict(torch.load(model_path + "_fc_mu.pt"))
@@ -156,7 +163,7 @@ if __name__ == "__main__":
     print("Loaded model")
 
     # Save the model.
-    model_path = Path("encoder_model").with_suffix(".pth")
+    model_path = Path(OUT_NAME).with_suffix(".pth")
     onnx_path = model_path.with_suffix(".onnx")
     ir_path = model_path.with_suffix(".xml")
 
@@ -203,6 +210,8 @@ if __name__ == "__main__":
 
     # using the same environment ... run:
     # mo --input_model "encoder_model.onnx" --input_shape "[1,4, 32, 32]" --data_type FP16 --output_dir "."
+
+    #  mo --input_model "encoder_model_mu.onnx" --input_shape "[1,4, 32, 32]" --data_type FP16 --output_dir .
 
     # - run on dedicated HW
 
