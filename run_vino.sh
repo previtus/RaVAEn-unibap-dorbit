@@ -27,3 +27,11 @@ python3.7 ravaen_payload/run_inference.py --batch_size 32
 python3.7 ravaen_payload/run_inference.py --batch_size 64
 python3.7 ravaen_payload/run_inference.py --batch_size 128
 
+## Compare the model verison:
+#
+#python3.7 ravaen_payload/run_inference_openvino.py --batch_size 64
+#python3.7 ravaen_payload/run_inference_openvino.py --batch_size 64 --openvino_device 'CPU' --log_name "log_openvinooncpu"
+#python3.7 ravaen_payload/run_inference.py --batch_size 64
+#
+#python3.7 ravaen_payload/run_inference_openvino.py --batch_size 64 --model "weights_openvino/encoder_model_mu.onnx" --log_name "log_openvino_Myriad_smallerModelMusOnly"
+#python3.7 ravaen_payload/run_inference_openvino.py --batch_size 64 --openvino_device 'CPU' --model "weights_openvino/encoder_model_mu.onnx" --log_name "log_openvino_CPU_smallerModelMusOnly"
