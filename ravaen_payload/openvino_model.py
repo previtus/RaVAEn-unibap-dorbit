@@ -71,14 +71,7 @@ def get_prediction_function(model_path="encoder_model.onnx", device='MYRIAD', ba
 
 
 def encode_batch_openvino(openvino_predictionfunc, xs, to_and_from_torch = True):
-    if to_and_from_torch:
-        xs = xs.numpy()
-
     #openvino_predictionfunc = get_prediction_function(model_path="encoder_model.onnx", device='MYRIAD', batch_size=64)
     mus = openvino_predictionfunc(xs)
-
-    if to_and_from_torch:
-        mus = torch.as_tensor(mus).float() # as a float, not a double
-
     return mus
 

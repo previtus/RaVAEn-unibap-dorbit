@@ -164,7 +164,6 @@ def main(settings):
 
         index = 0
         for batch in dataloader:
-            time_before_encode = time.time()
 
             samples_in_batch = len(batch)
             if samples_in_batch < BATCH_SIZE:
@@ -172,7 +171,13 @@ def main(settings):
                 batch_fullshape = torch.zeros(BATCH_SIZE, batch.shape[1], batch.shape[2], batch.shape[3])
                 batch_fullshape[0:samples_in_batch] = batch
                 batch = batch_fullshape
-            mus = encode_batch_openvino(model_predict_function, batch)
+            batch_np = batch.numpy() # torch to np
+
+            time_before_encode = time.time()
+            mus = encode_batch_openvino(model_predict_function, batch_np)
+            encode_time = time.time() - time_before_encode
+
+            mus = torch.as_tensor(mus).float() # np to torch
 
             # print(batch.shape, "=>", mus.shape)
             if samples_in_batch < BATCH_SIZE:# ~ openvino always outputs the whole batchsize
@@ -184,7 +189,6 @@ def main(settings):
                 print("keep_latent_log_var not supported!")
                 assert False
 
-            encode_time = time.time() - time_before_encode
             time_before_compare = time.time()
 
             if previous_file in latents_per_file:
