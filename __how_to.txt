@@ -1,7 +1,7 @@
 
 docker build -t ravaen_payload .
 
-# auto run
+# simple run on the CPU
 docker run -it --rm -v /dev:/dev \
                 -v "/$(pwd)/weights":/weights \
                 -v "/$(pwd)/unibap_dataset":/unibap_dataset \
@@ -13,10 +13,10 @@ bash
 python3.7 run_inference.py
 
 
-### Run on the whole dataset:
-docker run -it --rm -v /dev:/dev \
-                -v "/$(pwd)/weights":/weights \
-                -v "PATH_TO_FULL_DATASET":/unibap_dataset_small \
-                -v "/$(pwd)/results":/results \
-                -m 2g ravaen_payload
+# advanced runs with MYRIAD
 
+docker run -it -v /dev/bus/usb:/dev/bus/usb --device-cgroup-rule='c 189:* rmw'  \
+                --rm -v "/$(pwd)/weights":/weights -v "/$(pwd)/unibap_dataset":/unibap_dataset \
+                -v "/$(pwd)/results":/results \
+                -v "/$(pwd)/weights_openvino":/weights_openvino -m 2g ravaen_payload bash
+cat run_vino.sh

@@ -5,6 +5,11 @@ import openvino.inference_engine
 from openvino.inference_engine import IECore
 ie = IECore()
 
+import sys
+sys.path.append('../')
+sys.path.append('../ravaen_payload/')
+
+
 import logging
 import numpy as np
 import glob
@@ -71,6 +76,8 @@ def load_model(model_path, device='MYRIAD') -> Callable:
 
     return predict
 
+BATCH_SIZE = 64
+example_input = np.random.rand(BATCH_SIZE, 4, 32, 32)
 
 #from model_to_vino_03_minimal import *
 model_path = "../weights_openvino/encoder_model.onnx"
@@ -81,17 +88,9 @@ exec_net = ie.load_network(network=model.net, device_name=device, config=None, n
 
 print("Debug inputs:", list(exec_net.inputs.keys()), "and outputs:", list(exec_net.outputs.keys()))
 
-example_input = np.random.rand(1, 4, 32, 32)
-result = exec_net.infer({'input.1': example_input})
-example_output = result['36']
-
-print("example_input", example_input.shape)
-print("example_output", example_output.shape)
-
 num_images = 100
 start = time.perf_counter()
 for _ in range(num_images):
-    example_input = np.random.rand(64, 4, 32, 32)
     result = exec_net.infer({'input.1': example_input})
     example_output = result['36']
 end = time.perf_counter()
@@ -116,17 +115,9 @@ try:
 
     print("Debug inputs:", list(exec_net.inputs.keys()), "and outputs:", list(exec_net.outputs.keys()))
 
-    example_input = np.random.rand(1, 4, 32, 32)
-    result = exec_net.infer({'input.1': example_input})
-    example_output = result['36']
-
-    print("example_input", example_input.shape)
-    print("example_output", example_output.shape)
-
     num_images = 100
     start = time.perf_counter()
     for _ in range(num_images):
-        example_input = np.random.rand(64, 4, 32, 32)
         result = exec_net.infer({'input.1': example_input})
         example_output = result['36']
     end = time.perf_counter()

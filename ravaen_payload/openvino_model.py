@@ -12,6 +12,7 @@ import numpy as np
 import glob
 from typing import Callable
 import time
+import torch
 
 class OpenVinoModel:
     def __init__(self, ie, model_path, batch_size=64):
@@ -62,25 +63,22 @@ def get_prediction_function(model_path="encoder_model.onnx", device='MYRIAD', ba
     print("example_output", example_output.shape)
 
     def predict(x: np.ndarray) -> np.ndarray:
-        """
-        Predict function using the myriad chip
-
-        Args:
-            x: (C, H, W) 3d tensor
-
-        Returns:
-            (C, H, W) 3D network logits
-
-        """
         result = exec_net.infer({'input.1': x[np.newaxis]})
-        return result['36'], result['37']
+        return result['36'] # just the mus
 
     return predict
 
 
 
-def encode_batch_openvino(openvino_predictionfunc, xs):
+def encode_batch_openvino(openvino_predictionfunc, xs, to_and_from_torch = True):
+    if to_and_from_torch:
+        xs = xs.numpy()
+
     #openvino_predictionfunc = get_prediction_function(model_path="encoder_model.onnx", device='MYRIAD', batch_size=64)
-    mus, logvars = openvino_predictionfunc(xs)
-    return mus, logvars
+    mus = openvino_predictionfunc(xs)
+
+    if to_and_from_torch:
+        mus = torch.as_tensor(mus).float() # as a float, not a double
+
+    return mus
 

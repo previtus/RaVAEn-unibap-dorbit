@@ -164,14 +164,15 @@ def main(settings):
         for batch in dataloader:
             time_before_encode = time.time()
 
-            np_batch = batch.numpy()
-            mus, log_vars = encode_batch_openvino(model_predict_function, np_batch)
+            mus = encode_batch_openvino(model_predict_function, batch)
 
             print(batch.shape, "=>", mus.shape)
 
             batch_size = len(mus)
             latents[index:index+batch_size] = mus
-            if keep_latent_log_var: latents_log_var[ index:index+batch_size ] = log_vars
+            if keep_latent_log_var:
+                print("keep_latent_log_var not supported!")
+                assert False
 
             encode_time = time.time() - time_before_encode
             time_before_compare = time.time()
