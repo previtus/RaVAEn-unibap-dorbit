@@ -6,9 +6,16 @@ def load_changemap(changemap_path):
     change_map_image = np.load(changemap_path)
     return change_map_image
 
-# RESULTS_DIR = "../results"
-RESULTS_DIR = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/logs_unibap/results05_newnames_allversions/"
-path = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/data/dataset of s2/unibap_dataset"
+RESULTS_DIR = "../results"
+# RESULTS_DIR = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/logs_unibap/results05_newnames_allversions/"
+# RESULTS_DIR = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/logs_unibap/results08_selected26files/"
+RESULTS_DIR = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/_logs_unibap/results10reducedfin/"
+
+RESULTS_DIR = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/_from_their_side_step2/results00_dec6/"
+
+# RESULTS_DIR = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/_logs_unibap_step1/results13d_modelVersionsAndPlottable/" # from a openvino cpu and mu only model
+
+path = "../unibap_dataset"
 all_files = available_files(root_dir=path)
 
 change_map_files = sorted(glob.glob(os.path.join(RESULTS_DIR, "*_changemap.npy")))

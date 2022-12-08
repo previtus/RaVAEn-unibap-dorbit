@@ -273,6 +273,42 @@ if __name__ == "__main__":
     logs = [logs_folder + "tile_classifier_log_" + str(i) + "batch_multiclass_4classes.json" for i in batchsizes]
     plot_train_times_multiple_runs(logs, names, "Training time, model: [128-Dense-4], 4 classes")
 
+    assert False
+
+    logs_folder = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/_logs_unibap/results12_trainWith12classes/"
+    batchsizes = [4,8,16,32, 64, 128, 256]
+    logs = [ logs_folder+"tile_classifier_log_"+str(i)+"batch_multiclass_12classes.json" for i in batchsizes]
+    names = [ "Batch Size "+str(i) for i in batchsizes]
+    plot_train_times_multiple_runs(logs, names)
+
+
+    ### v10 inspection
+    logs_folder = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/_logs_unibap/results10reducedfin/"
+    logs_folder = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/_logs_unibap/results11f_finals/results11f/"
+    logs_folder = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/_logs_unibap/results11f_finals/results11f_checkWithBadPaths/"
+
+    """log types:
+    highres10band_128batch.json
+    log_16batch.json
+    * tile_classifier_log_32batch.json
+    * tile_classifier_log_32batch_multiclass_4classes.json
+    """
+    batchsizes = [32, 64, 128, 256]
+    logs = [ logs_folder+"tile_classifier_log_"+str(i)+"batch.json" for i in batchsizes]
+    names = [ "Batch Size "+str(i) for i in batchsizes]
+    plot_train_times_multiple_runs(logs, names)
+
+    # plot_other_times(logs, names)
+
+
+    batchsizes = [32, 64, 128, 256]
+    logs = [ logs_folder+"tile_classifier_log_"+str(i)+"batch_multiclass_4classes.json" for i in batchsizes]
+    names = [ "4 classes model, Batch Size "+str(i) for i in batchsizes]
+    plot_train_times_multiple_runs(logs, names)
+
+
+    assert False
+
     log_path = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/logs_unibap/results06_withlogsv2/tile_classifier_log_64batch.json"
     #inspect_train_logs(log_path)
 
