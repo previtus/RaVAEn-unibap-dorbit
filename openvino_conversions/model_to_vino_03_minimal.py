@@ -73,8 +73,7 @@ def load_model(model_path, device='MYRIAD') -> Callable:
 
 
 #from model_to_vino_03_minimal import *
-
-model_path = "encoder_model.onnx"
+model_path = "../weights_openvino/encoder_model.onnx"
 device = 'CPU'
 ie = IECore()
 model = OpenVinoModel(ie, model_path)
@@ -109,7 +108,7 @@ res_onnx_cpu = example_output
 res_onnx_myriad = None
 try:
     print("trying on MYRIAD!")
-    model_path = "encoder_model.onnx"
+    model_path = "../weights_openvino/encoder_model.onnx"
     device = 'MYRIAD'
     ie = IECore()
     model = OpenVinoModel(ie, model_path)

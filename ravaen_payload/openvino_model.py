@@ -73,7 +73,7 @@ def get_prediction_function(model_path="encoder_model.onnx", device='MYRIAD', ba
 
         """
         result = exec_net.infer({'input.1': x[np.newaxis]})
-        return result['36']
+        return result['36'], result['37']
 
     return predict
 
@@ -81,5 +81,6 @@ def get_prediction_function(model_path="encoder_model.onnx", device='MYRIAD', ba
 
 def encode_batch_openvino(openvino_predictionfunc, xs):
     #openvino_predictionfunc = get_prediction_function(model_path="encoder_model.onnx", device='MYRIAD', batch_size=64)
-    return openvino_predictionfunc(xs)
+    mus, logvars = openvino_predictionfunc(xs)
+    return mus, logvars
 
