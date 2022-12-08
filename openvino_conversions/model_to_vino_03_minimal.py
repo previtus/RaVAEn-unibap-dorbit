@@ -17,11 +17,11 @@ from typing import Callable
 import time
 
 class OpenVinoModel:
-    def __init__(self, ie, model_path):
+    def __init__(self, ie, model_path, batch_size=64):
         self.logger = logging.getLogger("model")
         print('\tModel path: {}'.format(model_path))
         self.net = ie.read_network(model_path, model_path[:-4] + '.bin')
-        self.set_batch_size(64)
+        self.set_batch_size(batch_size)
 
     def preprocess(self, inputs):
         meta = {}

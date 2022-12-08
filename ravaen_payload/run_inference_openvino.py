@@ -61,6 +61,7 @@ def main(settings):
         logged[ "args_"+key ] = settings[key]
 
     BATCH_SIZE = int(settings["batch_size"])
+    OPENVINO_DEVICE = int(settings["openvino_device"])
     settings_dataloader ['dataloader']['batch_size'] = BATCH_SIZE
     NUM_WORKERS = int(settings["num_workers"])
     settings_dataloader ['dataloader']['num_workers'] = NUM_WORKERS
@@ -105,9 +106,8 @@ def main(settings):
     time_before_model_load = time.time()
     cfg_train = {}
 
-    DEVICE = 'MYRIAD'
     ONNX_MODEL_PATH = "../weights_openvino/encoder_model.onnx" # needs both .onnx and .bin
-    model_predict_function = get_prediction_function(model_path=ONNX_MODEL_PATH, device=DEVICE, batch_size=BATCH_SIZE)
+    model_predict_function = get_prediction_function(model_path=ONNX_MODEL_PATH, device=OPENVINO_DEVICE, batch_size=BATCH_SIZE)
 
     model_load_time = time.time() - time_before_model_load
     logged["time_model_load"] = model_load_time
@@ -276,7 +276,7 @@ if __name__ == "__main__":
                         help="Path to the model weights")
     parser.add_argument('--results_dir', default=custom_path+'results/',
                         help="Path where to save the results")
-    parser.add_argument('--log_name', default='log',
+    parser.add_argument('--log_name', default='log_openvino',
                         help="Name of the log (batch size will be appended in any case).")
     # parser.add_argument('--time-limit', type=int, default=300,
     #                     help="time limit for running inference [300]")
@@ -312,6 +312,10 @@ if __name__ == "__main__":
     parser.add_argument('--nosave', default=False,
                         help="Skip saving latents and change det results (for dummy experiments).")
 
+
+    # OPENVINO:
+    parser.add_argument('--openvino_device', default='MYRIAD',
+                        help="Which device to run openvino code on? MYRIAD or CPU")
 
     args = vars(parser.parse_args())
 
