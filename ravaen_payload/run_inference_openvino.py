@@ -166,18 +166,24 @@ def main(settings):
         for batch in dataloader:
             time_before_encode = time.time()
 
+            print("DEBUG0 batch", batch.shape)
+
             samples_in_batch = len(batch)
             if samples_in_batch < BATCH_SIZE:
                 # maybe it's better to fill it with zeros for openvino
                 batch_fullshape = torch.zeros(BATCH_SIZE, batch.shape[1], batch.shape[2], batch.shape[3])
                 batch_fullshape[0:samples_in_batch] = batch
                 batch = batch_fullshape
+                print("DEBUG1 batch_fullshape", batch_fullshape.shape)
 
             mus = encode_batch_openvino(model_predict_function, batch)
+            print("DEBUG2 mus output", mus.shape)
 
             # print(batch.shape, "=>", mus.shape)
             if samples_in_batch < BATCH_SIZE:# ~ openvino always outputs the whole batchsize
-                mus = mus[0:len(batch)]
+                mus = mus[0:samples_in_batch]
+                print("DEBUG3 mus adjusted", mus.shape)
+
             batch_size = len(mus)
             latents[index:index+batch_size] = mus
             if keep_latent_log_var:
