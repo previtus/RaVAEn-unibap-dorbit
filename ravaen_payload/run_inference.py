@@ -183,6 +183,7 @@ def main(settings):
         if keep_latent_log_var: latents_log_var = torch.zeros((tiles_n,LATENT_SIZE))
 
         index = 0
+        batch_i = 0
         for batch in dataloader:
             time_before_encode = time.time()
             mus, log_vars = encode_batch(model, batch, keep_latent_log_var)
@@ -210,16 +211,18 @@ def main(settings):
             time_to_encode_compare = time_now - time_before_encode
 
             if time_total == 0:
-                print("Single evaluation of batch size ",batch_size,"took ", time_to_encode_compare, " = encode batch ", encode_time, " + compare batch", compare_time)
-                #print("One item from the batch ", time_to_encode_compare/batch_size, " = encode one ", encode_time/batch_size, " + compare one", compare_time/batch_size)
-
-                logged["time_file_" + str(file_i).zfill(3) + "_first_full_batch_encode"] = encode_time
-                logged["time_file_" + str(file_i).zfill(3) + "_first_full_batch_compare"] = compare_time
-                logged["time_file_" + str(file_i).zfill(3) + "_first_full_batch_encode_and_compare"] = time_to_encode_compare # for sanity check mostly
+                print("Single evaluation of batch size ", batch_size, "took ", time_to_encode_compare,
+                      " = encode batch ", encode_time, " + compare batch", compare_time)
+                # print("One item from the batch ", time_to_encode_compare/batch_size, " = encode one ", encode_time/batch_size, " + compare one", compare_time/batch_size)
+            if True:
+                logged["time_file_" + str(file_i).zfill(3) + "_batch_"  + str(batch_i).zfill(3) + "_encode" ] = encode_time
+                logged["time_file_" + str(file_i).zfill(3) + "_batch_"  + str(batch_i).zfill(3) + "_compare" ] = compare_time
+                logged["time_file_" + str(file_i).zfill(3) + "_batch_"  + str(batch_i).zfill(3) + "_encode_and_compare" ] = time_to_encode_compare
 
             time_total += time_to_encode_compare
 
             index += batch_size
+            batch_i += 1
 
         time_whole_file = time.time() - time_zero
 

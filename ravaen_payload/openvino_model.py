@@ -70,7 +70,7 @@ def get_prediction_function(model_path="encoder_model.onnx", device='MYRIAD', ba
 
 
 
-def encode_batch_openvino(openvino_predictionfunc, xs, to_and_from_torch = True):
+def encode_batch_openvino(openvino_predictionfunc, xs):
     #openvino_predictionfunc = get_prediction_function(model_path="encoder_model.onnx", device='MYRIAD', batch_size=64)
     mus = openvino_predictionfunc(xs)
     return mus

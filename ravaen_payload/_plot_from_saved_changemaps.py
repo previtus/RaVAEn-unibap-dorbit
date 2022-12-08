@@ -15,6 +15,9 @@ RESULTS_DIR = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/_from_their_side
 
 # RESULTS_DIR = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/_logs_unibap_step1/results13d_modelVersionsAndPlottable/" # from a openvino cpu and mu only model
 
+# is only onnx enough?
+RESULTS_DIR = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/_logs_unibap_step1/results13g_isJustOnnxFileEnough/"
+
 path = "../unibap_dataset"
 all_files = available_files(root_dir=path)
 

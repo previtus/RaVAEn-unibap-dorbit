@@ -163,6 +163,7 @@ def main(settings):
         if keep_latent_log_var: latents_log_var = torch.zeros((tiles_n,LATENT_SIZE))
 
         index = 0
+        batch_i = 0
         for batch in dataloader:
 
             samples_in_batch = len(batch)
@@ -205,16 +206,18 @@ def main(settings):
             time_to_encode_compare = time_now - time_before_encode
 
             if time_total == 0:
-                print("Single evaluation of batch size ",batch_size,"took ", time_to_encode_compare, " = encode batch ", encode_time, " + compare batch", compare_time)
-                #print("One item from the batch ", time_to_encode_compare/batch_size, " = encode one ", encode_time/batch_size, " + compare one", compare_time/batch_size)
-
-                logged["time_file_" + str(file_i).zfill(3) + "_first_full_batch_encode"] = encode_time
-                logged["time_file_" + str(file_i).zfill(3) + "_first_full_batch_compare"] = compare_time
-                logged["time_file_" + str(file_i).zfill(3) + "_first_full_batch_encode_and_compare"] = time_to_encode_compare # for sanity check mostly
+                print("Single evaluation of batch size ", batch_size, "took ", time_to_encode_compare,
+                      " = encode batch ", encode_time, " + compare batch", compare_time)
+                # print("One item from the batch ", time_to_encode_compare/batch_size, " = encode one ", encode_time/batch_size, " + compare one", compare_time/batch_size)
+            if True:
+                logged["time_file_" + str(file_i).zfill(3) + "_batch_"  + str(batch_i).zfill(3) + "_encode" ] = encode_time
+                logged["time_file_" + str(file_i).zfill(3) + "_batch_"  + str(batch_i).zfill(3) + "_compare" ] = compare_time
+                logged["time_file_" + str(file_i).zfill(3) + "_batch_"  + str(batch_i).zfill(3) + "_encode_and_compare" ] = time_to_encode_compare
 
             time_total += time_to_encode_compare
 
             index += batch_size
+            batch_i += 1
 
         time_whole_file = time.time() - time_zero
 
@@ -285,7 +288,7 @@ if __name__ == "__main__":
                         help="Indices to the files we want to use. Files will be processed sequentially, each pair evaluated for changes.")
     parser.add_argument('--save_only_k_latents', default="8", # number of "all"
                         help="How many latents do we want to save?. Defaults to 10, can select 'all'.")
-    parser.add_argument('--model', default=custom_path+'weights_openvino/encoder_model.onnx',
+    parser.add_argument('--model', default=custom_path+'weights_openvino/encoder_model_mu.onnx',
                         help="Path to the ONNX model weights")
     parser.add_argument('--results_dir', default=custom_path+'results/',
                         help="Path where to save the results")
