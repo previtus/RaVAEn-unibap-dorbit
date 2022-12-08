@@ -61,7 +61,7 @@ def main(settings):
         logged[ "args_"+key ] = settings[key]
 
     BATCH_SIZE = int(settings["batch_size"])
-    OPENVINO_DEVICE = int(settings["openvino_device"])
+    OPENVINO_DEVICE = settings["openvino_device"]
     settings_dataloader ['dataloader']['batch_size'] = BATCH_SIZE
     NUM_WORKERS = int(settings["num_workers"])
     settings_dataloader ['dataloader']['num_workers'] = NUM_WORKERS
