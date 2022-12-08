@@ -59,8 +59,8 @@ def get_prediction_function(model_path="encoder_model.onnx", device='MYRIAD', ba
     result = exec_net.infer({'input.1': example_input})
     example_output = result['36']
 
-    print("example_input", example_input.shape)
-    print("example_output", example_output.shape)
+    # print("example_input", example_input.shape)
+    # print("example_output", example_output.shape)
 
     def predict(x: np.ndarray) -> np.ndarray:
         result = exec_net.infer({'input.1': x[np.newaxis]})
