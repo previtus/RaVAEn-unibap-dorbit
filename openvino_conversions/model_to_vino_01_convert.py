@@ -113,7 +113,21 @@ class EncoderOnly(nn.Module):
 
     def forward(self, input: Tensor, **kwargs) -> List[Tensor]:
         mu, log_var = self.encode(input)
-        return mu, log_var
+        return mu, log_var # NOTE: with this model version, we keep both the mu's and logvars
+
+
+class EncoderOnly_MeansOnly(EncoderOnly):
+
+    def encode(self, input: Tensor, verbose=False) -> List[Tensor]:
+        result = self.encoder(input)
+        # result = self.encoder(torch.nan_to_num(input)) # < nan_to_num not supported by ONNX!
+        result = torch.flatten(result, start_dim=1)
+        mu = self.fc_mu(result)
+        return mu
+
+    def forward(self, input: Tensor, **kwargs) -> List[Tensor]:
+        mu = self.encode(input)
+        return mu
 
 
 if __name__ == "__main__":

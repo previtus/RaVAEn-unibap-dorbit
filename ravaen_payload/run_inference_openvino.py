@@ -167,7 +167,8 @@ def main(settings):
             mus = encode_batch_openvino(model_predict_function, batch)
 
             print(batch.shape, "=>", mus.shape)
-
+            if len(mus) > len(batch): # ~ openvino always outputs the whole batchsize
+                mus = mus[0:len(batch)]
             batch_size = len(mus)
             latents[index:index+batch_size] = mus
             if keep_latent_log_var:

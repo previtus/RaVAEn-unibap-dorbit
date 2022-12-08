@@ -76,7 +76,7 @@ def load_model(model_path, device='MYRIAD') -> Callable:
 
     return predict
 
-BATCH_SIZE = 64
+BATCH_SIZE = 8
 example_input = np.random.rand(BATCH_SIZE, 4, 32, 32)
 
 #from model_to_vino_03_minimal import *
