@@ -291,7 +291,7 @@ if __name__ == "__main__":
                         help="Indices to the files we want to use. Files will be processed sequentially, each pair evaluated for changes.")
     parser.add_argument('--save_only_k_latents', default="8", # number of "all"
                         help="How many latents do we want to save?. Defaults to 10, can select 'all'.")
-    parser.add_argument('--model', default=custom_path+'weights_openvino/encoder_model_mu.onnx',
+    parser.add_argument('--model', default=custom_path+'weights/encoder_model_mu.onnx',
                         help="Path to the ONNX model weights")
     parser.add_argument('--results_dir', default=custom_path+'results/',
                         help="Path where to save the results")
