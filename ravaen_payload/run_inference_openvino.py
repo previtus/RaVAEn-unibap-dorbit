@@ -19,7 +19,7 @@ from openvino_model import get_prediction_function, encode_batch_openvino
 # -- Keep the same: --
 BANDS = [0,1,2,3] # Unibap format
 LATENT_SIZE = 128
-plot = True # if set to True, needs matplotlib
+plot = False # if set to True, needs matplotlib
 if plot:
     try:
         import matplotlib as plt

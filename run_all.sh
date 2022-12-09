@@ -38,5 +38,7 @@ python3.7 ravaen_payload/run_inference.py --batch_size 64 --override_channels 3 
 python3.7 ravaen_payload/run_inference.py --batch_size 64 --override_channels 10 --log_name "exp10band" --nosave True
 
 # EXPERIMENT 3 OPENVINO on MYRIAD and on CPU
-python3.7 ravaen_payload/run_inference_openvino.py --batch_size 64
-python3.7 ravaen_payload/run_inference_openvino.py --batch_size 64 --openvino_device 'CPU' --log_name "log_openvinooncpu"
+source /opt/intel/openvino/bin/setupvars.sh -pyver 3.7
+
+python3.7 ravaen_payload/run_inference_openvino.py --batch_size 64 --nosave True
+python3.7 ravaen_payload/run_inference_openvino.py --batch_size 64 --openvino_device 'CPU' --log_name "log_openvinooncpu" --nosave True
