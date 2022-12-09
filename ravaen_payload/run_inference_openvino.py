@@ -106,10 +106,14 @@ def main(settings):
     time_before_model_load = time.time()
     cfg_train = {}
 
-    ONNX_MODEL_PATH = settings["model"]
-    print("Loading from ONNX_MODEL_PATH=",ONNX_MODEL_PATH)
-    # ONNX_MODEL_PATH = "../weights_openvino/encoder_model.onnx" # needs both .onnx and .bin
-    model_predict_function = get_prediction_function(model_path=ONNX_MODEL_PATH, device=OPENVINO_DEVICE, batch_size=BATCH_SIZE)
+    try:
+        ONNX_MODEL_PATH = settings["model"]
+        print("Loading from ONNX_MODEL_PATH=",ONNX_MODEL_PATH)
+        # ONNX_MODEL_PATH = "../weights_openvino/encoder_model.onnx" # needs both .onnx and .bin
+        model_predict_function = get_prediction_function(model_path=ONNX_MODEL_PATH, device=OPENVINO_DEVICE, batch_size=BATCH_SIZE)
+    except:
+        print("[!!!] Failed creating and loading the ONNX model!")
+        logged["fail_onnx_model"] = True
 
     model_load_time = time.time() - time_before_model_load
     logged["time_model_load"] = model_load_time

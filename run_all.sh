@@ -9,9 +9,6 @@ python3.7 ravaen_payload/run_inference.py --batch_size 32
 python3.7 ravaen_payload/run_inference.py --batch_size 64
 python3.7 ravaen_payload/run_inference.py --batch_size 128
 
-python3.7 ravaen_payload/run_inference.py --batch_size 32 --override_channels 10 --log_name "highres10band" --nosave True
-python3.7 ravaen_payload/run_inference.py --batch_size 64 --override_channels 10 --log_name "highres10band" --nosave True
-python3.7 ravaen_payload/run_inference.py --batch_size 128 --override_channels 10 --log_name "highres10band" --nosave True
 
 top -n 1 -b > results/top_1_after_inference.txt
 
@@ -28,11 +25,18 @@ python3.7 tile_classifier/run_train.py --batch_size 64 --multiclass True --numcl
 python3.7 tile_classifier/run_train.py --batch_size 128 --multiclass True --numclasses 4
 python3.7 tile_classifier/run_train.py --batch_size 256 --multiclass True --numclasses 4
 
+python3.7 tile_classifier/run_train.py --batch_size 32 --multiclass True --numclasses 12
+python3.7 tile_classifier/run_train.py --batch_size 64 --multiclass True --numclasses 12
+python3.7 tile_classifier/run_train.py --batch_size 128 --multiclass True --numclasses 12
+python3.7 tile_classifier/run_train.py --batch_size 256 --multiclass True --numclasses 12
+
 top -n 1 -b > results/top_2_after_train.txt
 
 # ADD RUNS
-# rgb
+# rgb and more (3 rgb, 10 highres, default has 4 = rgb+nir)
 python3.7 ravaen_payload/run_inference.py --batch_size 64 --override_channels 3 --log_name "exp3band" --nosave True
-python3.7 ravaen_payload/run_inference.py --batch_size 64 --override_channels 6 --log_name "exp6band" --nosave True
-python3.7 ravaen_payload/run_inference.py --batch_size 64 --override_channels 8 --log_name "exp8band" --nosave True
+python3.7 ravaen_payload/run_inference.py --batch_size 64 --override_channels 10 --log_name "exp10band" --nosave True
 
+# EXPERIMENT 3 OPENVINO on MYRIAD and on CPU
+python3.7 ravaen_payload/run_inference_openvino.py --batch_size 64
+python3.7 ravaen_payload/run_inference_openvino.py --batch_size 64 --openvino_device 'CPU' --log_name "log_openvinooncpu"
