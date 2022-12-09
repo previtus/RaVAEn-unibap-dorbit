@@ -116,6 +116,8 @@ def main(settings):
             print("Loaded model!")
     except:
         print("[!!!] Failed loading the model! Will instead continue with random init weights!")
+        logged["fail_loading_model"] = True
+
         try:
             import torch.nn as nn
             seed_all_torch_numpy_random(int(time.time()))
@@ -127,6 +129,7 @@ def main(settings):
             print("Weights randomly initialised!")
         except:
             print("(and failed again when trying to init random)")
+            logged["fail_init_random_model"] = True
 
     module.model.eval()
     model = module.model
@@ -135,7 +138,7 @@ def main(settings):
     logged["time_model_load"] = model_load_time
 
     ### DATA
-
+    compare_func = twin_vae_change_score_from_latents
 
     latents_per_file = {}
     for file_i, file_path in enumerate(selected_files):
@@ -167,13 +170,14 @@ def main(settings):
             data_module = create_dummy_data_module_v2(settings_dataloader, file_path, in_memory, number_of_bands=number_of_bands)
             tiles_n = len(data_module.train_dataset)
             dataloader = data_module.train_dataloader()
+            logged["fail_loading_data"] = True
+
         dataloader_create = time.time() - time_before_dataloader
         logged["time_file_" + str(file_i).zfill(3) + "_dataloader_create"] = dataloader_create
 
         # get latents and save them
         # use them to calculate change map in comparison with the previous image in sequence
 
-        compare_func = twin_vae_change_score_from_latents
         time_total = 0
         time_zero = time.time()
 
@@ -240,6 +244,7 @@ def main(settings):
                 if keep_latent_log_var: save_latents(settings["results_dir"], latents_log_var, uid_name=this_file_uid, log_var=True)
         except:
             print("[!!!] Failed saving the latents! No recovery needed.")
+            logged["fail_saving_latents"] = True
 
         latents_per_file[file_i] = latents
 
@@ -256,6 +261,7 @@ def main(settings):
                     plot_tripple(settings["results_dir"],predicted_distances, previous_file, file_i, selected_files)
             except:
                 print("[!!!] Failed saving the change detection output map! No recovery needed.")
+                logged["fail_saving_changemaps"] = True
 
         time_after_saved = time.time() - time_before_saves
         logged["time_file_"+ str(file_i).zfill(3) +"_save_latents_changemap"] = time_after_saved

@@ -27,7 +27,8 @@ def plot_times_multiple_runs(log_paths, run_names, plot_title = "", ignore_list=
     observed_times = [
         "total_encode_compare_with_IO",
         "total_encode_compare",
-        "first_full_batch_encode",
+        "_batch_000_encode", # < first batch of each file ...
+        # "first_full_batch_encode",
         # "first_full_batch_compare",
         # "first_full_batch_encode_and_compare", # sanitycheck - it should be the same as the last two added
         "dataloader_create",
