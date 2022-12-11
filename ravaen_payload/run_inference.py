@@ -3,7 +3,7 @@ import numpy as np
 from data_functions import DataNormalizerLogManual_ExtraStep, load_datamodule, file2uniqueid, create_dummy_data_module_v2
 from unibap_dataset_query import get_unibap_dataset_data
 from model_functions import Module, DeeperVAE
-from util_functions import which_device, seed_all_torch_numpy_random
+from util_functions import which_device, seed_all_torch_numpy_random, log_mem
 from save_functions import save_latents, save_change
 from anomaly_functions import encode_batch, twin_vae_change_score_from_latents
 import torch
@@ -145,6 +145,12 @@ def main(settings):
         # print("DEBUG file_i, file_path", file_i, file_path)
         previous_file = file_i - 1
         previous_file_name = selected_files[previous_file]
+
+        if file_i == 1:
+            # at first file try saving the memory logs!
+            mem1, mem2 = log_mem()
+            logged["memory_log_atFile1_mem1"] = mem1
+            logged["memory_log_atFile1_mem2"] = mem2
 
         try:
             previous_file_uid = file2uniqueid(previous_file_name)

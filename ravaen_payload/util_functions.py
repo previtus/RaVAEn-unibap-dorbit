@@ -1,5 +1,8 @@
 import numpy as np
 import random, torch
+import os
+
+
 def which_device(model):
     device = next(model.parameters()).device
     print("Model is on:", device)
@@ -16,3 +19,8 @@ def sequence2pairs(sequence):
     for i in range(len(sequence)-1):
         pairs.append([sequence[i], sequence[i+1]])
     return pairs
+
+def log_mem():
+    mem1 = str(os.popen('free -t -m').readlines())
+    mem2 = str(os.popen('cat /proc/meminfo').readlines())
+    return mem1, mem2
