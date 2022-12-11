@@ -7,10 +7,12 @@ import numpy as np
 import torch
 
 if __name__ == "__main__":
-    dataset_dir = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/data/dataset of s2/unibap_dataset"
+    dataset_dir = "../unibap_dataset"
 
     model = LilModel()
-    tile_model_path = "../results/tile_model.pt"
+    # tile_model_path = "../results/tile_model.pt"
+    RESULTS_DIR = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/_logs_unibap_step1/results15_prefinal_again/"
+    tile_model_path = RESULTS_DIR+"tile_model_256batch.pt"
     model.load_state_dict(torch.load(tile_model_path))
     model.eval()
 

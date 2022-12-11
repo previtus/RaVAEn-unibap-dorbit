@@ -207,7 +207,7 @@ def plot_train_times_multiple_runs(log_paths, run_names, plot_title=""):
         data[run_name] = means_per_runs[i]
         std_data[run_name] = stds_per_runs[i]
 
-    fig, ax = plt.subplots(figsize=(10, 5))
+    fig, ax = plt.subplots(figsize=(5, 5))
     if len(plot_title) > 0:
         plt.title(plot_title)
 
@@ -263,6 +263,27 @@ def plot_other_times(log_paths, run_names):
 
 
 if __name__ == "__main__":
+    logs_folder = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/_logs_unibap_step1/results15_prefinal_again/"
+    batchsizes = [32, 64, 128, 256]
+    logs = [ logs_folder+"tile_classifier_log_"+str(i)+"batch.json" for i in batchsizes]
+    names = ["Batch Size " + str(i) for i in batchsizes]
+    plot_train_times_multiple_runs(logs, names, "Training time, model: [128-Dense-1]")
+
+    # logs = [logs_folder + "tile_classifier_log_" + str(i) + "batch_multiclass_4classes.json" for i in batchsizes]
+    # plot_train_times_multiple_runs(logs, names, "Training time, model: [128-Dense-4], 4 classes")
+    #
+    # logs = [logs_folder + "tile_classifier_log_" + str(i) + "batch_multiclass_12classes.json" for i in batchsizes]
+    # plot_train_times_multiple_runs(logs, names, "Training time, model: [128-Dense-12], 12 classes")
+    #
+
+    logs = ["tile_classifier_log_64batch.json","tile_classifier_log_64batch_multiclass_4classes.json","tile_classifier_log_64batch_multiclass_12classes.json"]
+    logs = [logs_folder+l for l in logs]
+    names = ["classifier 1", "classifier 4", "classifier 12"]
+    plot_train_times_multiple_runs(logs, names, "Training times")
+
+    assert False
+
+
     # logs from dorbit
     logs_folder = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/_from_their_side_step2/results00_dec6/"
     batchsizes = [32, 64, 128, 256]

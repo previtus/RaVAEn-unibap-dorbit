@@ -92,17 +92,33 @@ if __name__ == "__main__":
     # V3 has more refined logs! Timings for each batch
 
     logs_folder = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/_logs_unibap_step1/results14_perBatchStats_mainRun/"
+    logs_folder = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/_logs_unibap_step1/results15_prefinal_again/"
+
     batchsizes = [32, 64, 128]
     logs = [ logs_folder+"log_"+str(i)+"batch.json" for i in batchsizes]
     names = [ "Batch Size "+str(i) for i in batchsizes]
-    #plot_times_multiple_runs(logs, names, "VAE (RGB+NIR) encoding speed")
-    #plt.show()
+    plot_times_multiple_runs(logs, names, "VAE (RGB+NIR) encoding speed")
+    plt.show()
 
     # all_keys(logs[0])
 
-    # plot_perf_over_batches(logs[1]) # batch 64
     # plot_perf_over_batches(logs[0]) # batch 32
-    plot_perf_over_batches(logs[2]) # batch 128
+    plot_perf_over_batches(logs[1]) # batch 64
+    # plot_perf_over_batches(logs[2]) # batch 128
+
+    ### Torch CPU, Openvino CPU vs Openvino MYRIAD
+    logs = ["log_64batch.json", "log_openvinooncpu_64batch.json", "log_openvino_64batch.json"]
+    logs = [logs_folder+l for l in logs]
+    names = ["Torch CPU", "Openvino CPU", "Openvino MYRIAD"]
+    plot_times_multiple_runs(logs, names, "Different compute devices ")
+    plt.show()
+
+    ### Model with 3 bands, 4 bands, 10 bands
+    logs = ["exp3band_64batch.json", "log_64batch.json", "exp10band_64batch.json"]
+    logs = [logs_folder + l for l in logs]
+    names = ["3 bands", "4 bands (real)", "10 bands"]
+    plot_times_multiple_runs(logs, names, "Model with different number of bands")
+    plt.show()
 
 """
 [Available times]
