@@ -13,6 +13,9 @@ if __name__ == "__main__":
     # tile_model_path = "../results/tile_model.pt"
     RESULTS_DIR = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/_logs_unibap_step1/results15_prefinal_again/"
     tile_model_path = RESULTS_DIR+"tile_model_256batch.pt"
+
+    # # EXPERIMENT!
+    # tile_model_path="/home/vitek/Vitek/Work/Trillium_RaVAEn_2/codes/RaVAEn-unibap-dorbit/results/tile_model_8batch.pt"
     model.load_state_dict(torch.load(tile_model_path))
     model.eval()
 

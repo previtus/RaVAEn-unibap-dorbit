@@ -178,6 +178,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser('Run training tile classifier')
     parser.add_argument('--dataset_as_np', default=custom_path+"weights/train_dataset_as_np.npz",
                         help="Path to the prepared latents dataset.")
+
+    # # EXPERIMENT!
+    # parser.add_argument('--dataset_as_np', default=custom_path+"weights/train_dataset_as_np_v2manuallyclicked.npz",
+    #                     help="Path to the prepared latents dataset.")
+
+
     parser.add_argument('--trained_model_path', default=custom_path+'results/tile_model',
                         help="Where to save the model weights  (batch size will be appended in any case).")
     parser.add_argument('--results_dir', default=custom_path+'results/',

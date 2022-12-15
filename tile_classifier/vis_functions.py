@@ -63,6 +63,31 @@ def tile_location(tile_id, tile_size=32, grid_shape=[15,15]):
                 return w_idx * tile_size + offset_into_center, h_idx * tile_size + offset_into_center
             index += 1
 
+def location_to_tile_id(dict_x_y_to_tile_i, click_x, click_y):
+    all_xs = dict_x_y_to_tile_i.keys()
+    # print("all_xs", all_xs)
+    closest_x = -1
+
+    min_dist = 9999
+    for x in all_xs:
+        x_dist = abs(x - click_x)
+        if x_dist < min_dist:
+            min_dist = x_dist
+            closest_x = x
+
+    all_ys = dict_x_y_to_tile_i[closest_x].keys()
+    # print("all_ys", all_ys)
+
+    closest_y = -1
+    min_dist = 9999
+    for y in all_ys:
+        y_dist = abs(y - click_y)
+        if y_dist < min_dist:
+            min_dist = y_dist
+            closest_y = y
+
+    return dict_x_y_to_tile_i[closest_x][closest_y], closest_x, closest_y
+
 def vis_image_with_predicted_labels(image_path, predictions, binary=True):
     img = load_as_image(image_path)
     img, grid_shape = to_tile_able(img)
