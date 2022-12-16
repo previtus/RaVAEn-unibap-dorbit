@@ -19,14 +19,20 @@ RESULTS_DIR = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/_from_their_side
 # RESULTS_DIR = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/_logs_unibap_step1/results13g_isJustOnnxFileEnough/"
 
 RESULTS_DIR = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/_logs_unibap_step1/results15_prefinal_again/"
+RESULTS_DIR = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/_from_their_side_step2/results01_dec13_corrected/ravaen_result/results/"
+RESULTS_DIR = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/step3_after it was packaged as a scfw app/14-12-2022_121557__ravaen/volumes/ravaen/"
 
 path = "../unibap_dataset"
 all_files = available_files(root_dir=path)
 
 change_map_files = sorted(glob.glob(os.path.join(RESULTS_DIR, "*_changemap.npy")))
+print(change_map_files)
 
 for i, change_map_file in enumerate(change_map_files):
     filename = change_map_file.split("/")[-1]
+    if filename == "pair_before_after_changemap.npy":
+        continue
+        # dummy
     filename_list = filename.split("_")
 
     pair_before_id = filename_list[2]

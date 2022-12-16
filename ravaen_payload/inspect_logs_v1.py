@@ -4,7 +4,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 
-def custom_bar_plot(ax, data, std_data=None, colors=None, total_width=0.8, single_width=1, legend=True):
+def custom_bar_plot(ax, data, std_data=None, colors=None, total_width=0.8, single_width=1, legend=True, special=None):
     # source: https://stackoverflow.com/questions/14270391/python-matplotlib-multiple-bars
     """Draws a bar plot with multiple bars per data point.
 
@@ -45,6 +45,12 @@ def custom_bar_plot(ax, data, std_data=None, colors=None, total_width=0.8, singl
     if colors is None:
         colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
+    if special == "delfirstcolor":
+        print(colors)
+        #f1 ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+        #f2
+        colors = colors[1:]
+
     # Number of bars per group
     n_bars = len(data)
 
@@ -71,6 +77,7 @@ def custom_bar_plot(ax, data, std_data=None, colors=None, total_width=0.8, singl
             yerr = None
             if std_data is not None: yerr = std_values_i_x[i][x]
             bar = ax.bar(x + x_offset, y, yerr=yerr, width=bar_width * single_width, color=colors[i % len(colors)])
+            ax.bar_label(bar)
 
         # Add a handle to the last drawn bar, which we'll need for the legend
         bars.append(bar[0])
@@ -138,6 +145,16 @@ def load_logs(log_path = "../results/logs.json"):
     print("Used args:",args)
     print("Measured times:",times)
     return args, times
+
+def load_logs_memory(log_path = "../results/logs.json"):
+    # Opening JSON file
+    with open(log_path) as json_file:
+        log_data = json.load(json_file)
+
+    keys = log_data.keys()
+    memory_keys = [k for k in keys if "memory_" in k]
+    memory = {k: log_data[k] for k in memory_keys}
+    return memory
 
 def plot_all_files(log_path = "../results/logs.json", ignore_file_i_above=None):
     args, times = load_logs(log_path)

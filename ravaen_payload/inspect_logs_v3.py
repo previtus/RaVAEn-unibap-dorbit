@@ -2,13 +2,20 @@ import json
 import numpy as np
 
 from matplotlib import pyplot as plt
-from inspect_logs_v1 import custom_bar_plot, plot_measurements, check_statistic, load_logs
+from inspect_logs_v1 import custom_bar_plot, plot_measurements, check_statistic, load_logs, load_logs_memory
 from inspect_logs_v2 import plot_times_multiple_runs, plot_all_files
 
 def all_keys(log_path = "../results/logs.json"):
     args, times = load_logs(log_path)
     for k in times.keys():
         print(k)
+
+def inspect_mem_logs(log_path):
+    memory = load_logs_memory(log_path)
+    print(memory.keys())
+    print(memory['memory_log_atFile1_mem1'])
+    print(memory['memory_log_atFile1_mem2'])
+
 
 def plot_perf_over_batches(log_path = "../results/logs.json", check=["encode", "compare", "encode_and_compare"]):
     args, times = load_logs(log_path)
@@ -91,13 +98,25 @@ def plot_perf_over_batches(log_path = "../results/logs.json", check=["encode", "
 if __name__ == "__main__":
     # V3 has more refined logs! Timings for each batch
 
-    logs_folder = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/_logs_unibap_step1/results14_perBatchStats_mainRun/"
-    logs_folder = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/_logs_unibap_step1/results15_prefinal_again/"
+    logs_folder = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/_logs_unibap_step1/results15a_prefinal_again/"
+    logs_folder = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/_logs_unibap_step1/results15b_testFromDockerWithLog/"
+    logs_folder = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/_logs_unibap_step1/results15c_oncemore/"
+    logs_folder = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/_from_their_side_step2/results01_dec13/results/"
+
+    logs_folder = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/_from_their_side_step2/results01_dec13_corrected/ravaen_result/results/"
+
+    # execution result of the application after it was packaged as a scfw app
+    logs_folder = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/step3_after it was packaged as a scfw app/14-12-2022_121557__ravaen/volumes/ravaen/"
 
     batchsizes = [32, 64, 128]
     logs = [ logs_folder+"log_"+str(i)+"batch.json" for i in batchsizes]
+
+    # inspect_mem_logs(logs[1])
+    ignore_list = ["save_latents_changemap", "dataloader_create", "_batch_000_encode" ]
+
     names = [ "Batch Size "+str(i) for i in batchsizes]
-    plot_times_multiple_runs(logs, names, "VAE (RGB+NIR) encoding speed")
+    plot_times_multiple_runs(logs, names, "VAE (RGB+NIR) encoding speed",
+                             ignore_list=ignore_list)
     plt.show()
 
     # all_keys(logs[0])
@@ -106,18 +125,24 @@ if __name__ == "__main__":
     plot_perf_over_batches(logs[1]) # batch 64
     # plot_perf_over_batches(logs[2]) # batch 128
 
+
     ### Torch CPU, Openvino CPU vs Openvino MYRIAD
     logs = ["log_64batch.json", "log_openvinooncpu_64batch.json", "log_openvino_64batch.json"]
     logs = [logs_folder+l for l in logs]
     names = ["Torch CPU", "Openvino CPU", "Openvino MYRIAD"]
-    plot_times_multiple_runs(logs, names, "Different compute devices ")
+    plot_times_multiple_runs(logs, names, "Different compute devices (batch 64)",
+                             ignore_list=ignore_list, special="delfirstcolor")
     plt.show()
+
+    plot_perf_over_batches(logs[2]) # 64 with myriad
+
 
     ### Model with 3 bands, 4 bands, 10 bands
     logs = ["exp3band_64batch.json", "log_64batch.json", "exp10band_64batch.json"]
     logs = [logs_folder + l for l in logs]
     names = ["3 bands", "4 bands (real)", "10 bands"]
-    plot_times_multiple_runs(logs, names, "Model with different number of bands")
+    plot_times_multiple_runs(logs, names, "Model with different number of bands (batch 64)",
+                             ignore_list=ignore_list)
     plt.show()
 
 """

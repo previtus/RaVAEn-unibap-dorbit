@@ -21,7 +21,7 @@ def plot_all_files(log_path = "../results/logs.json", ignore_file_i_above=None):
     plot_measurements([times_with_io, times_without_io,times_one_encode,times_one_compare],
                       ["Processing time with IO", "Processing time without IO", "One batch encode", "One batch compare"])
 
-def plot_times_multiple_runs(log_paths, run_names, plot_title = "", ignore_list=[]):
+def plot_times_multiple_runs(log_paths, run_names, plot_title = "", ignore_list=[], special=None):
     num_runs = len(log_paths)
 
     observed_times = [
@@ -86,7 +86,7 @@ def plot_times_multiple_runs(log_paths, run_names, plot_title = "", ignore_list=
     fig, ax = plt.subplots(figsize=(10, 5))
     if len(plot_title) > 0:
         plt.title(plot_title)
-    custom_bar_plot(ax, data, std_data, total_width=.8, single_width=.9)
+    custom_bar_plot(ax, data, std_data, total_width=.8, single_width=.9, special=special)
     plt.xticks(range(len(name_plots)), name_plots)
     # plt.show()
 

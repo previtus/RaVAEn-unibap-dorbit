@@ -263,7 +263,13 @@ def plot_other_times(log_paths, run_names):
 
 
 if __name__ == "__main__":
-    logs_folder = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/_logs_unibap_step1/results15_prefinal_again/"
+    logs_folder = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/_logs_unibap_step1/results15a_prefinal_again/"
+    logs_folder = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/_logs_unibap_step1/results15b_testFromDockerWithLog/"
+
+    logs_folder = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/_from_their_side_step2/results01_dec13_corrected/ravaen_result/results/"
+
+    logs_folder = "/home/vitek/Vitek/Work/Trillium_RaVAEn_2/results/step3_after it was packaged as a scfw app/14-12-2022_121557__ravaen/volumes/ravaen/"
+
     batchsizes = [32, 64, 128, 256]
     logs = [ logs_folder+"tile_classifier_log_"+str(i)+"batch.json" for i in batchsizes]
     names = ["Batch Size " + str(i) for i in batchsizes]
@@ -276,10 +282,12 @@ if __name__ == "__main__":
     # plot_train_times_multiple_runs(logs, names, "Training time, model: [128-Dense-12], 12 classes")
     #
 
-    logs = ["tile_classifier_log_64batch.json","tile_classifier_log_64batch_multiclass_4classes.json","tile_classifier_log_64batch_multiclass_12classes.json"]
+    b = "256"
+    # b = "128"
+    logs = ["tile_classifier_log_"+b+"batch.json","tile_classifier_log_"+b+"batch_multiclass_4classes.json","tile_classifier_log_"+b+"batch_multiclass_12classes.json"]
     logs = [logs_folder+l for l in logs]
     names = ["classifier 1", "classifier 4", "classifier 12"]
-    plot_train_times_multiple_runs(logs, names, "Training times")
+    plot_train_times_multiple_runs(logs, names, "Training times (with batch "+b+")")
 
     assert False
 
