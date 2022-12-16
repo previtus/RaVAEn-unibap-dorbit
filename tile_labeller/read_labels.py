@@ -8,7 +8,7 @@ from vis_functions import tile_location
 def available_annotations(root_dir="."):
     return sorted(glob.glob(os.path.join(root_dir,"*.npy")))
 
-def dataset_from_manual_annotation(annotation_folder):
+def dataset_from_manual_annotation(annotation_folder, exclude_train_set_tiles=[]):
     # dataset
     dataset_dir = "../unibap_dataset"
     all_images = available_files(dataset_dir)
@@ -20,8 +20,8 @@ def dataset_from_manual_annotation(annotation_folder):
     all_labels_files = [path.split("/")[-1].replace(".npy", "") for path in all_labels]
 
     print("Found", len(all_images), "images and ", len(all_labels), "annotation files.")
-    print(all_images[0:5])
-    print(all_labels[0:5])
+    # print(all_images[0:5])
+    # print(all_labels[0:5])
 
     dict_image_to_labels = {}
     for img_path in all_images_files:
@@ -29,9 +29,7 @@ def dataset_from_manual_annotation(annotation_folder):
             idx = all_labels_files.index(img_path)
             dict_image_to_labels[ img_path ] = all_labels[idx]
 
-    print("Images with labels:",dict_image_to_labels)
-
-    exclude_train_set_tiles = []
+    # print("Images with labels:",dict_image_to_labels)
 
     # we want:
     #X latents: (1305, 128)
@@ -50,8 +48,10 @@ def dataset_from_manual_annotation(annotation_folder):
             # not labelled
             continue
 
-        if image_id in exclude_train_set_tiles:
+        if int(image_id) in exclude_train_set_tiles:
             # on purpose ignored ...
+            print(image_id, "ignored")
+
             continue
 
         # Run the model on this image's tiles ...
@@ -92,4 +92,15 @@ if __name__ == "__main__":
     print("X latents:", X_latents.shape)
     print("X tiles:", X_tiles.shape)
     print("Y labels:", Y.shape)
+
+
+
+    exclude_train_set_tiles = [104, 743, 448, 127, 358, 642]
+    X_latents_test, X_tiles_test, Y_test = dataset_from_manual_annotation(PATH, exclude_train_set_tiles)
+
+    print("Dataset:")
+    print("X latents (test):", X_latents_test.shape)
+    print("X tiles (test):", X_tiles_test.shape)
+    print("Y labels (test):", Y_test.shape)
+
 
