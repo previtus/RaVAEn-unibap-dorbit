@@ -17,7 +17,7 @@ def inspect_mem_logs(log_path):
     print(memory['memory_log_atFile1_mem2'])
 
 
-def plot_perf_over_batches(log_path = "../results/logs.json", check=["encode", "compare", "encode_and_compare"]):
+def plot_perf_over_batches(log_path = "../results/logs.json", check=["encode", "compare", "encode_and_compare"], add_title=""):
     args, times = load_logs(log_path)
 
     batch_size = args['args_batch_size']
@@ -82,7 +82,7 @@ def plot_perf_over_batches(log_path = "../results/logs.json", check=["encode", "
 
         ax.set_ylabel('Time in sec')
         ax.set_xlabel('File i')
-        ax.set_title('Timing per file and per batch ('+stat+'):')
+        ax.set_title('Timing per file and per batch ('+stat+')'+add_title+':')
         ax.legend()
         plt.show()
         # ###
@@ -121,8 +121,8 @@ if __name__ == "__main__":
 
     # all_keys(logs[0])
 
-    # plot_perf_over_batches(logs[0]) # batch 32
-    plot_perf_over_batches(logs[1]) # batch 64
+    plot_perf_over_batches(logs[0], add_title=", (batch 32)") # batch 32
+    plot_perf_over_batches(logs[1], add_title=", (batch 64)") # batch 64
     # plot_perf_over_batches(logs[2]) # batch 128
 
 

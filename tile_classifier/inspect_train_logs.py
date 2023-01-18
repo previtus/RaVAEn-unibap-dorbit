@@ -71,6 +71,7 @@ def custom_bar_plot(ax, data, std_data=None, colors=None, total_width=0.8, singl
             yerr = None
             if std_data is not None: yerr = std_values_i_x[i][x]
             bar = ax.bar(x + x_offset, y, yerr=yerr, width=bar_width * single_width, color=colors[i % len(colors)])
+            ax.bar_label(bar)
 
         # Add a handle to the last drawn bar, which we'll need for the legend
         bars.append(bar[0])
