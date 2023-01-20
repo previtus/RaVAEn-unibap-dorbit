@@ -164,7 +164,7 @@ def inspect_train_logs(log_path = "../results/logs.json"):
     plot_measurements([times_traininig_epochs],
                       ["Training time per epoch"])
 
-def plot_train_times_multiple_runs(log_paths, run_names, plot_title=""):
+def plot_train_times_multiple_runs(log_paths, run_names, plot_title="", save=False):
     num_runs = len(log_paths)
 
     observed_times = [
@@ -214,8 +214,12 @@ def plot_train_times_multiple_runs(log_paths, run_names, plot_title=""):
 
     custom_bar_plot(ax, data, std_data, total_width=.8, single_width=.9)
     plt.xticks(range(len(name_plots)), name_plots)
-    plt.show()
+    ax.set_ylabel('Time in sec')
 
+    if save:
+        plt.savefig(save)
+
+    plt.show()
 
 
 def plot_other_times(log_paths, run_names):

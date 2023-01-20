@@ -17,7 +17,7 @@ def inspect_mem_logs(log_path):
     print(memory['memory_log_atFile1_mem2'])
 
 
-def plot_perf_over_batches(log_path = "../results/logs.json", check=["encode", "compare", "encode_and_compare"], add_title=""):
+def plot_perf_over_batches(log_path = "../results/logs.json", check=["encode", "compare", "encode_and_compare"], add_title="", save=False):
     args, times = load_logs(log_path)
 
     batch_size = args['args_batch_size']
@@ -66,7 +66,7 @@ def plot_perf_over_batches(log_path = "../results/logs.json", check=["encode", "
         # stacked bar data:
         labels = [str(i) for i in range(num_of_files)]
         width = 0.35  # the width of the bars: can also be len(x) sequence
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(10, 5))
 
         cummulative_bottom = None
         for batch_i in range(num_of_batches):
@@ -84,6 +84,11 @@ def plot_perf_over_batches(log_path = "../results/logs.json", check=["encode", "
         ax.set_xlabel('File i')
         ax.set_title('Timing per file and per batch ('+stat+')'+add_title+':')
         ax.legend()
+
+        if save:
+            ending=save.split(".")[-1]
+            plt.savefig(save + "_"+stat+"."+ending)
+
         plt.show()
         # ###
         # plot_all = plot_all[0:8]
