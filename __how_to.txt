@@ -13,11 +13,15 @@ bash
 python3.7 run_inference.py
 
 
-# advanced runs with MYRIAD
+# full run with CPU and also MYRIAD at the end
+
+docker run -it -v /dev/bus/usb:/dev/bus/usb --device-cgroup-rule='c 189:* rmw'  --rm -v "/$(pwd)/weights":/weights -v "/$(pwd)/unibap_dataset":/unibap_dataset -v "/$(pwd)/results":/results  -v "/$(pwd)/weights_openvino":/weights_openvino -m 2g ravaen_payload
 
 docker run -it -v /dev/bus/usb:/dev/bus/usb --device-cgroup-rule='c 189:* rmw'  \
                 --rm -v "/$(pwd)/weights":/weights -v "/$(pwd)/unibap_dataset":/unibap_dataset \
                 -v "/$(pwd)/results":/results \
                 -v "/$(pwd)/weights_openvino":/weights_openvino -m 2g ravaen_payload ravaen_payload bash run_vino.sh
+
+
 bash
 cat run_vino.sh

@@ -28,7 +28,7 @@ if __name__ == "__main__":
     # plot_perf_over_batches(logs[2], add_title=", (batch 128)") # batch 128
 
     plot_perf_over_batches(logs[1], add_title=", (pytorch cpu, b64)", check=["encode"],
-                           save="fig2_details_cpu_batches.png") # batch 64
+                           save="fig2_details_cpu_batches.pdf") # batch 64
 
 
     ### Torch CPU, Openvino CPU vs Openvino MYRIAD
@@ -37,14 +37,14 @@ if __name__ == "__main__":
     names = ["Torch CPU", "Openvino CPU", "Openvino MYRIAD"]
     plot_times_multiple_runs(logs, names, "Different compute devices (batch 64)",
                              ignore_list=ignore_list, special="delfirstcolor",
-                             save="fig1_inference_diff_devices.png")
+                             save="fig1_inference_diff_devices.pdf")
     plt.show()
 
 
     # are there outliers when using Openvino?
     # plot_perf_over_batches(logs[1], add_title=", (openvino cpu, b64)", check=["encode"]) # batch 64
     plot_perf_over_batches(logs[2], add_title=", (openvino myriad, b64)", check=["encode"],
-                           save="fig2_details_myriad_batches.png") # batch 64
+                           save="fig2_details_myriad_batches.pdf") # batch 64
 
 
     ### Model with 3 bands, 4 bands, 10 bands

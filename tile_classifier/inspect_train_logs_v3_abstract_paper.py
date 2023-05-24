@@ -12,7 +12,7 @@ if __name__ == "__main__":
     names = ["Batch Size " + str(i) for i in batchsizes]
 
     plot_train_times_multiple_runs(logs, names, "Training time, model: [128-Dense-1]",
-                                   save="fig1_training_on_board_batchsizes.png")
+                                   save="fig1_training_on_board_batchsizes.pdf")
 
     # logs = [logs_folder + "tile_classifier_log_" + str(i) + "batch_multiclass_4classes.json" for i in batchsizes]
     # plot_train_times_multiple_runs(logs, names, "Training time, model: [128-Dense-4], 4 classes")
