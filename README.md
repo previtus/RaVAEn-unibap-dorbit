@@ -12,3 +12,8 @@ In addition, we also demonstrate to the best of our knowledge the world’s firs
 ## Publication
 
 If you this work useful in your research, please consider citing our paper _"Fast model inference and training on-board of Satellites"_ presented at the IEEE IGARSS 2023: https://2023.ieeeigarss.org/view_paper.php?PaperNum=5969
+
+We also have the paper pre-print available at https://arxiv.org/abs/2307.08700:
+
+> Růžička, V., Mateo-García, G., Bridges, C., Brunskill, C., Purcell, C., Longépé, N., & Markham, A. (2023). Fast model inference and training on-board of Satellites. arXiv preprint arXiv:2307.08700.
+
