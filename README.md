@@ -17,3 +17,17 @@ We also have the paper pre-print available at https://arxiv.org/abs/2307.08700:
 
 > Růžička, V., Mateo-García, G., Bridges, C., Brunskill, C., Purcell, C., Longépé, N., & Markham, A. (2023). Fast model inference and training on-board of Satellites. arXiv preprint arXiv:2307.08700.
 
+## Citation
+If this work useful, please consider citing the following paper:
+```
+@inproceedings{ravaen2023fast,
+  title={Fast model inference and training on-board of Satellites},
+  url = {https://arxiv.org/abs/2307.08700},
+  booktitle = {International Geoscience and Remote Sensing Symposium (IGARSS) 2023, {Pasadena}, {California}, {USA}},
+  author={Růžička, Vít and Mateo-García, Gonzalo and Bridges, Chris and Brunskill, Chris and Purcell, Cormac and Longépé, Nicolas and Markham, Andrew},
+  month = jul,
+  year={2023},
+  note = {arXiv: 2307.08700}
+}
+```
+
